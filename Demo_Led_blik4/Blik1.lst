@@ -1766,8 +1766,8 @@ ARM Macro Assembler    Page 28
    25 00000000         ; jsou zde definovany adresy pristupu do pameti (k regis
                        trum)
    26 00000000         
-   27 00000000 0000001E 
-                       konst   EQU              30          ; direktiva EQU pri
+   27 00000000 00000064 
+                       konst   EQU              100         ; direktiva EQU pri
                                                             radi vyrazu 'konst'
                                                              hodnotu 100 dekadi
                                                             cky
@@ -1852,7 +1852,7 @@ ARM Macro Assembler    Page 29
                                                             itu
    66 00000012         ; na brane C (LED na PC8 nesviti)
    67 00000012         
-   68 00000012 F04F 001E       MOV              R0,#konst   ; Vlozeni do RO hod
+   68 00000012 F04F 0064       MOV              R0,#konst   ; Vlozeni do RO hod
                                                             noty prodlevy, tj. 
                                                             100 dekadicky
    69 00000016         ; RO je v tomto pripade jako vstupni parametr podprogram
@@ -1878,7 +1878,7 @@ ARM Macro Assembler    Page 29
                         
    80 00000022         ; jsou nulovany
    81 00000022         
-   82 00000022 F04F 001E       MOV              R0,#konst   ; opet vlozeni hodn
+   82 00000022 F04F 0064       MOV              R0,#konst   ; opet vlozeni hodn
                                                             oty prodlevy do R0,
                                                              zde tato isntrukce
                                                              jiz
@@ -5611,7 +5611,7 @@ ARM Macro Assembler    Page 52 Alphabetic symbol ordering
 Absolute symbols
 
 Comment: doba used once
-konst 0000001E
+konst 00000064
 
 Symbol: konst
    Definitions

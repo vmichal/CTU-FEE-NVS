@@ -24,7 +24,7 @@
 		GET		INI_1.s					; vlozeni souboru s pojmenovanymi adresami
 										; jsou zde definovany adresy pristupu do pameti (k registrum)
 										
-konst	EQU		30						; direktiva EQU priradi vyrazu 'konst' hodnotu 100 dekadicky
+konst	EQU		100						; direktiva EQU priradi vyrazu 'konst' hodnotu 100 dekadicky
 doba	EQU		0x10000					; direktiva EQU priradi vyrazu 'doba' hodnotu 10000 hexadecimálnì
 
 											
