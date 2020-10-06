@@ -10,18 +10,31 @@
 	AREA    STM32F10x_INI, CODE, READONLY    
 
 
+GPIOA_BASE          EQU     0x40010800
+GPIOB_BASE          EQU     0x40010C00    
+GPIOC_BASE          EQU     0x40011000
+GPIOD_BASE          EQU     0x40011400
+GPIOE_BASE          EQU     0x40011800
+    
+GPIO_CRL_o EQU 0x0
+GPIO_CRH_o EQU 0x4
+GPIO_IDR_o EQU 0x8
+GPIO_ODR_o EQU 0xc
+GPIO_BSRR_o EQU 0x10
+GPIO_BRR_o EQU 0x14
 
- 
+
 ;********************************************************************************
 ;*   				GPIOA				 	  	*
 ;********************************************************************************
 ;GPIOA Registers 
 ;-------------------------------------------------------------------------------- 
-GPIOA_CRL			EQU		0x40010800
+
+GPIOA_CRL			EQU		GPIOA_BASE + GPIO_CRL_o
 ;--------------------------------------------------------------------------------
-GPIOA_CRH	 		EQU		0x40010804
+GPIOA_CRH	 		EQU		GPIOA_BASE + GPIO_CRH_o
 ;--------------------------------------------------------------------------------
-GPIOA_IDR	 		EQU		0x40010808 ; input data regist
+GPIOA_IDR	 		EQU		GPIOA_BASE + GPIO_IDR_o ; input data regist
 ;GPIOA_IDR	bits
 AIDR15				EQU		0x4221013C; 15
 AIDR14				EQU		0x42210138; 14
@@ -73,11 +86,11 @@ GPIOA_LCKR	 		EQU		0x40010818
 ;********************************************************************************
 ;GPIOC Registers 
 ;--------------------------------------------------------------------------------
-GPIOC_CRL			EQU		0x40011000
+GPIOC_CRL			EQU		GPIOC_BASE + GPIO_CRL_o
 ;--------------------------------------------------------------------------------
-GPIOC_CRH	 		EQU		0x40011004
+GPIOC_CRH	 		EQU		GPIOC_BASE + GPIO_CRH_o
 ;--------------------------------------------------------------------------------
-GPIOC_IDR	 		EQU		0x40011008 ; input data regist
+GPIOC_IDR	 		EQU		GPIOC_BASE + GPIO_IDR_o; input data regist
 ;GPIOC_IDR	bits
 CIDR15				EQU		0x4222013C; 15
 CIDR14				EQU		0x42220138; 14

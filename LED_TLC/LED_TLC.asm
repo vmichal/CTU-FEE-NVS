@@ -35,7 +35,16 @@ konst2 EQU	0x10000						; direktiva EQU priradi vyrazu 'konst2' hodnotu 0x10000
 
         IMPORT STK_CONFIG
         IMPORT BlockingDelay
-
+        IMPORT GPIO_CNF
+        IMPORT RCC_CNF
+        import userButtonPressedFiltered
+                    import userButtonSample
+    import ledBlueOn        
+    import ledBlueOff
+    import ledGreenOn
+    import ledGreenOff            
+            
+            
 		;SystemTicks ; Stores the number of ms since boot (for now lives in the beggining of RAM)
 __use_two_region_memory	
 __main								  						
@@ -64,36 +73,31 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
 
-				LDR		R2, =GPIOC_ODR	; Kopie adresy brany C ODR do R2, GPIOC_ODR je v souboru INI.S			
-										; ODR - Output Data Register
+
          
 				MOV		R3, #konst1		; Kopie konstanty 'konst1' do R3
 				MOV		R4,#0			; Vlozeni 0 do R4, nulovani citace (softwarový citac registr R4)
-				LDR		R5, =GPIOA_IDR 	; Kopie adresy brany A IDR do R5, GPIOA_IDR je v souboru INI.S			
-										; IDR - Input Data Register
 
-LOOP									; hlavni smycka programu, blikani LED a cteni stavu tlacitka			
 
+LOOP									; hlavni smycka programu, blikani LED a cteni stavu tlacitka	
 				ADD		R4,R4,#1		; R4 = R4 + 1, inkrementace citace o 1
-				
-				; Blikani LED, frekvence je dana registrem R3
-				MOV		R1, #0x0100		; Vlozeni hodnoty 0x100 do R1, konstanta pro nastaveni bitu 8 
 				TST		R4, R3			; Porovnani R4 a R3 => (R4 & R3) a nastaveni priznaku
-										; testuje se jestli je v R4 (citac) pozadovana hodnota
-										; tj. jeli nastaven urcity bit (hodnota v R3)
-				BEQ		LOOP1			; Skok na navesti LOOP1, je-li vysledek predchozi operace roven 0
-										; tj. skok na LOOP1	v pripade nerovnosti bitu na dane pozici
-				MOV		R1, #0x0200		; Vlozeni hodnoty 0x200 do R1, konstanta pro nastaveni bitu 9
-LOOP1			
-				STR		R1, [R2]		; Zapis hodnoty v R1 na adresu v R2, nastaveni/nulovani bitu
-										; na brane (LED se rozsviti/zhasne)
+                beq GREEN
+BLUE
+                bl ledBlueOn
+                bl ledGreenOff
+                b AFTER
+GREEN
+                bl ledBlueOff
+                bl ledGreenOn
+AFTER
+; Blikani LED, frekvence je dana registrem R3
+
 
 				; Testovani stisku tlacitka
-				LDR		R1, [R5]		; Nacteni obsahu registru na adrese v R5 do R1, tj. cteni brany A
-				
-				TST		R1, #0x1		; Porovnani R1 a 1 => (R1 & 1) a nastaveni priznaku
-										; testuje se jestli je v R1 (brana A) pozadovana hodnota
-										; tj. jeli nastaven bit 0
+                bl userButtonPressedFiltered
+                
+                tst r0, r0
 				BEQ		LOOP			; Skok na navesti LOOP, je-li vysledek predchozi operace roven 0
 										; tj. skok na LOOP pri nestisknutem tlacitku, jinak se pokracuje
 
@@ -114,102 +118,4 @@ KONST
 				B		LOOP			; Skok na navesti LOOP pro opakovani smycky
 
 
-;***************************************************************************************************
-;* Jmeno funkce		: RCC_CNF
-;* Popis			: Konfigurace systemovych hodin a hodin periferii
-;* Vstup			: Zadny
-;* Vystup			: Zadny
-;* Komentar			: Nastaveni PLL jako zdroj hodin systemu (24MHz),
-;*  				  a privedeni hodin na branu A a C 	
-;**************************************************************************************************
-RCC_CNF	
-				LDR		R0, =RCC_CR		; Kopie adresy RCC_CR (Clock Control Register) do R0,
-										; RCC_CRje v souboru INI.S			
-				LDR		R1, [R0]		; Nacteni obsahu registru na adrese v R0 do R1
-				BIC		R1, R1, #0x50000; Editace hodnoty v R1, tj. nulovani hodnoty, kde je '1'
-										; HSE oscilator OFF (HSEON), ext.oscilator NOT BZPASSED(HSEBYP) 
-				STR		R1, [R0]		; Ulozeni editovane hodnoty v R1 na adresu v R0 
- 
-				LDR		R1, [R0]		; Opet nacteni do R1 stav registru RCC_CR
-				ORR		R1, R1, #0x10000; Maska pro zapnuti HSE	(krystalovy oscilator)	
-				STR		R1, [R0]		; HSE zapnut
-NO_HSE_RDY		LDR		R1, [R0]		; Nacteni do R1 stav registru RCC_CR
-				TST	 	R1, #0x20000	; Test stability HSE, (R0 & 0x20000)
-				BEQ 	NO_HSE_RDY		; Skok pri nestabilite, pri stabilite se pokracuje v kodu
-	
-				LDR		R0, =RCC_CFGR	; Nacteni adresy RCC_CFGR (Clock Configuration Register) do R0
-				LDR		R1, [R0]		; Nacteni do R1 stav registru RCC_CFGR
-				BIC		R1, R1, #0xF0	; Editace, SCLK nedeleno
-				STR		R1, [R0]		; Ulozeni noveho stavu do RCC_CFGR 
-
-				LDR		R1, [R0]		; Opet nacteni RCC_CFGR
-				BIC		R1, R1, #0x3800	; Editace, HCLK nedeleno (PPRE2)
-				STR		R1, [R0]		; Ulozeni nove hodnoty
-
-				LDR		R1, [R0]		; Opet nacteni RCC_CFGR
-				BIC		R1, R1, #0x700	; HCLK nedeleno	(PPRE1)
-				ORR		R1, R1, #0x400	; Maskovani, konstanta pro HCLK/2
-				STR		R1, [R0]		; Ulozeni nove hodnoty
-			
-				LDR		R1, [R0]		 ; Opet nacteni RCC_CFGR
-				BIC		R1, R1, #0x3F0000; Nuluje PLLMUL, PLLXTPRE, PLLSRC
-				LDR		R2, =0x50000	 ; Maska, PLL x3, HSE jako PLL vstup =24MHz Clk
-				ORR		R1, R1, R2		 ; Maskovani, logicky soucet R1 a R2	
-				STR		R1, [R0]		 ; Ulozeni nove hodnoty		 
-
-				LDR		R0, =PLLON		; Nacteni adresy bitu PLLON do R0(ADRESA BIT BANDING)
-				MOV		R1, #0x01		; Konstanta pro povoleni PLL (fazovy zaves) 
-				STR		R1, [R0]		; Ulozeni nove hodnoty
-
-				LDR		R0, =RCC_CR		; Kopie adresy  RCC_CR do R0
-NO_PLL_RDY		LDR		R1, [R0]		; Nacteni stavu registru RCC_CR do R1
-				TST		R1, #0x2000000	; Test spusteni PLL (test stability)
-				BEQ		NO_PLL_RDY		; Skok na navesti NO_PLL_RDY pri nespustene PLL
-
-				LDR		R0, =RCC_CFGR	; Kopie adresy RCC_CFGR do R0
-				LDR		R1, [R0]		; Nacteni stavu registru RCC_CFGR do R1
-				BIC		R1, R1, #0x3	; HSI jako hodiny
-			;	ORR		R1, R1, #0x1	; Maskovani, HSE jako hodiny
-				ORR		R1, R1, #0x2	; Maskovani, PLL jako hodiny
-				STR		R1, [R0]		; PLL je zdroj hodin
-
-				LDR		R0, =RCC_APB2ENR; Kopie adresy RCC_APB2ENR (APB2 peripheral clock enable register) do R0  
-				LDR		R1, [R0]		; Nacteni stavu registru RCC_APB2ENR do R1
-				LDR		R2, =0x14		; Konstanta pro zapnuti hodin pro branu A a C
-				ORR		R1, R1, R2		; Maskovani		
-				STR		R1, [R0]		; Ulozeni nove hodnoty
-
-				BX		LR				; Navrat z podprogramu, skok na adresu v LR
- 
-;**************************************************************************************************
-;* Jmeno funkce		: GPIO_CNF
-;* Popis			: Konfigurace brany A a C
-;* Vstup			: Zadny
-;* Vystup			: Zadny
-;* Komentar			: Nastaveni PC08 a PC09 jako vystup (10MHz), PA0 jako vstup push-pull	
-;**************************************************************************************************
-GPIO_CNF								; Navesti zacatku podprogramu
-				LDR		R2, =0xFF		; Konstanta pro nulovani nastaveni bitu 8, 9	
-				LDR		R0, =GPIOC_CRH	; Kopie adresy GPIOC_CRH (Port Configuration Register High)
-										; do R0, GPIOC_CRH je v souboru INI.S	
-				LDR		R1, [R0]		; Nacteni hodnoty z adresy v R0 do R1 
-				BIC		R1, R1, R2 		; Nulovani bitu v R2 
-				MOV		R2, #0x11		; Vlozeni 1 do R2
-				ORR		R1, R1, R2		; maskovani, bit 8, 9 nastven jako vystup push-pull v modu 1 (10MHz)
-				STR		R1, [R0]		; Ulozeni konfigurace PCO9 a PC09
-
-				LDR		R2, =0xF		; Konstanta pro nulovani nastaveni bitu 0	
-				LDR		R0, =GPIOA_CRL	; Kopie adresy GPIOA_CRL (Port Configuration Register Low)
-										; do R0, GPIOA_CRL je v souboru INI.S	
-				LDR		R1, [R0]		; Nacteni hodnoty z adresy v R0 do R1 
-				BIC		R1, R1, R2 		; Nulovani bitu v R2 
-				MOV		R2, #0x8		; Vlozeni 1 do R2
-				ORR		R1, R1, R2		; maskovani, bit 0 nastven jako push-pull vstup
-				STR		R1, [R0]		; Ulozeni konfigurace PAO0
-
-				BX		LR				; Navrat z podprogramu, skok na adresu v LR
-                          
-
-				NOP
-                NOP
 				END	

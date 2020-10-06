@@ -26,12 +26,13 @@ SystemTicks SPACE 4
 ;**************************************************************************************************
 STK_CONFIG								; Navesti zacatku podprogramu
 ; System clock runs at 24MHz speed
-    
+
+    push {r1, r2, lr}
+
     LDR r1, =SystemTicks ;clear the memory location for SystemTicks
     mov r2, #0
     str r2, [r1]
 
-    push {r1, r2, lr}
     LDR r1, =STK_LOAD ;configure reload register to 24 000 ticks
     str r0, [r1]
     
@@ -54,11 +55,15 @@ STK_CONFIG								; Navesti zacatku podprogramu
 ;**************************************************************************************************
 SysTick_Handler								; Navesti zacatku podprogramu
 ; System clock runs at 24MHz speed
+    push {lr}
     ldr r0, =SystemTicks
     ldr r1, [r0]
     add r1, #1    
     str r1, [r0]
-    bx lr
+    
+    import userButtonSample
+    bl userButtonSample
+    pop {pc}
     
 GetTick; returns the current time in ms
     ldr r0, =SystemTicks
