@@ -9,31 +9,27 @@ Project File Date:  10/06/2020
 <h2>Output:</h2>
 Build target 'STM32F1xx'
 assembling LED_TLC.asm...
+LED_TLC.asm(215): warning: A1581W: Added 2 bytes of padding at address 0xfa
 linking...
-Program Size: Code=464 RO-data=236 RW-data=0 ZI-data=512  
-".\LED_TLC.axf" - 0 Error(s), 0 Warning(s).
+Program Size: Code=448 RO-data=236 RW-data=0 ZI-data=520  
+".\LED_TLC.axf" - 0 Error(s), 1 Warning(s).
 Load "C:\\Users\\Já\\source\\repos\\NVS\\LED_TLC\\LED_TLC.axf" 
 Erase Done.
 Programming Done.
 Verify OK.
-pos\\NVS\\LED_TLC\\LED_TLC.axf" 
-Erase Done.
+ata=0 ZI-data=520  
+".\LED_TLC.axf" - 0 Error(s), 3 Warning(s).
+.
 Programming Done.
 Verify OK.
-Programming Done.
-Verify OK.
- 3 Error(s), 1 Warning(s).
+.\LED_TLC.axf" - 1 Error(s), 2 Warning(s).
 Target not created
-ddress 0x13a
-".\LED_TLC.axf" - 2 Error(s), 3 Warning(s).
+.s(7): error: A1105E: Area directive missing
+SysTick.s(7): warning: A1088W: Faking declaration of area AREA |$$$$$$$|
+SysTick.s(11): error: A1163E: Unknown opcode STM32F10x_INI, , expecting opcode or Macro
+".\LED_TLC.axf" - 3 Error(s), 4 Warning(s).
 Target not created
- at end of line
-CorePeripherals.s(29): error: A1108E: Multiply defined symbol 'STK_CTRL_COUNTFLAG'
-".\LED_TLC.axf" - 4 Error(s), 2 Warning(s).
-Target not created
-E directive from (25): warning: 
-   included by GET/INCLUDE directive from : 
-CorePeripherals.s(31): error: A1108E: Multiply defined symbol 'AIDR11'
+08E: Multiply defined symbol 'AIDR11'
    included by GET/INCLUDE directive from (25): warning: 
    included by GET/INCLUDE directive from : 
 CorePeripherals.s(32): error: A1108E: Multiply defined symbol 'AIDR10'

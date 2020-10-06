@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\LED_TLC.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\LED_TLC.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 06 03:52:11 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 06 11:36:24 2020
 <BR><P>
 <H3>Maximum Stack Usage =          0 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -15,7 +15,11 @@ Functions with no stack information
  <LI><a href="#[39]">__user_initial_stackheap</a>
  <LI><a href="#[37]">__main</a>
  <LI><a href="#[38]">__use_two_region_memory</a>
+ <LI><a href="#[3a]">STK_CONFIG</a>
  <LI><a href="#[9]">SysTick_Handler</a>
+ <LI><a href="#[3d]">GetTick</a>
+ <LI><a href="#[3c]">TimeElapsed</a>
+ <LI><a href="#[3b]">BlockingDelay</a>
 </UL>
 </UL>
 <P>
@@ -71,7 +75,7 @@ Function Pointers
  <LI><a href="#[2d]">SPI1_IRQHandler</a> from stm32f10x.o(.text) referenced from stm32f10x.o(RESET)
  <LI><a href="#[2e]">SPI2_IRQHandler</a> from stm32f10x.o(.text) referenced from stm32f10x.o(RESET)
  <LI><a href="#[6]">SVC_Handler</a> from stm32f10x.o(.text) referenced from stm32f10x.o(RESET)
- <LI><a href="#[9]">SysTick_Handler</a> from led_tlc.o(STM32F10x_INI) referenced from stm32f10x.o(RESET)
+ <LI><a href="#[9]">SysTick_Handler</a> from systick.o(STM32F10x_INI) referenced from stm32f10x.o(RESET)
  <LI><a href="#[c]">TAMPER_IRQHandler</a> from stm32f10x.o(.text) referenced from stm32f10x.o(RESET)
  <LI><a href="#[22]">TIM1_BRK_IRQHandler</a> from stm32f10x.o(.text) referenced from stm32f10x.o(RESET)
  <LI><a href="#[25]">TIM1_CC_IRQHandler</a> from stm32f10x.o(.text) referenced from stm32f10x.o(RESET)
@@ -288,12 +292,37 @@ Global Symbols
 <P><STRONG><a name="[39]"></a>__user_initial_stackheap</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, stm32f10x.o(.text), UNUSED, KEPT)
 
 <P><STRONG><a name="[37]"></a>__main</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[3a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;STK_CONFIG
+<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
+</UL>
 
 <P><STRONG><a name="[38]"></a>__use_two_region_memory</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI), UNUSED, KEPT)
 
-<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI))
+<P><STRONG><a name="[3a]"></a>STK_CONFIG</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+
+<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
 <BR>[Address Reference Count : 1]<UL><LI> stm32f10x.o(RESET)
-</UL><P>
+</UL>
+<P><STRONG><a name="[3d]"></a>GetTick</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
+<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
+</UL>
+
+<P><STRONG><a name="[3c]"></a>TimeElapsed</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
+</UL>
+
+<P><STRONG><a name="[3b]"></a>BlockingDelay</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
+<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+</UL>
+<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+<P>
 <H3>
 Local Symbols
 </H3><P>

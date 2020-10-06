@@ -23,6 +23,7 @@
 		GET		INI.s					; vlozeni souboru s pojmenovanymi adresami
 										; jsou zde definovany adresy pristupu do pameti (k registrum)
         GET		CorePeripherals.s	
+        
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 konst1 EQU	0x80000 					; direktiva EQU priradi vyrazu 'konst1' hodnotu 0x80000 
 konst2 EQU	0x10000						; direktiva EQU priradi vyrazu 'konst2' hodnotu 0x10000 
@@ -31,7 +32,9 @@ konst2 EQU	0x10000						; direktiva EQU priradi vyrazu 'konst2' hodnotu 0x10000
 											
 		EXPORT	__main					; export navesti pouzivaneho v jinem souboru, zde konkretne
 		EXPORT	__use_two_region_memory	; jde o navesti, ktere pouziva startup code STM32F10x.s
-        EXPORT SysTick_Handler
+
+        IMPORT STK_CONFIG
+        IMPORT BlockingDelay
 
 		;SystemTicks ; Stores the number of ms since boot (for now lives in the beggining of RAM)
 __use_two_region_memory	
@@ -48,12 +51,11 @@ __main
 ;***************************************************************************************************
 
 MAIN									; MAIN navesti hlavni smycky programu			
-                ldr r0, =0x20000000
-                mov r1, #0
-                str r1, [r0] ;clear the RAM location for tick counter
+
 				BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
 										; tj. skok na adresu s navestim RCC_CNF a ulozeni navratove 
 										; adresy do LR (Link Register)
+                mov r0, #24000 ;24 000 cycles between SysTick interrupt (corresponds to 24MHz system clock)
                 bl STK_CONFIG
 				BL		GPIO_CNF		; Volani podprogramu konfigurace vyvodu procesoru
 										; tj. skok na adresu s navestim GPIO_CNF 
@@ -97,7 +99,7 @@ LOOP1
 
 				; Prodleva pro osetreni zakmitu tlacitka
 				MOV		R0, #100			; Vlozeni hodnoty prodlevy do R0, tj. 50
-				BL		DELAY			; Volani rutiny prodlevy, R0 je vtupni parametr DELAY
+				BL		BlockingDelay			; Volani rutiny prodlevy, R0 je vtupni parametr DELAY
 
 				; Zmena modu blikani LED, vlozeni jine konstanty frekvence blikani do R3
  				TST		R3, #konst1		; Test puvodni hodnoty konstanty v R3, (R3 & 0x80000) nebo 
@@ -207,90 +209,7 @@ GPIO_CNF								; Navesti zacatku podprogramu
 
 				BX		LR				; Navrat z podprogramu, skok na adresu v LR
                           
-;**************************************************************************************************
-;* Jmeno funkce		: STK_CONFIG
-;* Popis			: Konfigurace Systicku na interrupt kazdou milisekundu
-;* Vstup			: Zadny
-;* Vystup			: Zadny
-;**************************************************************************************************
-STK_CONFIG								; Navesti zacatku podprogramu
-; System clock runs at 24MHz speed
-    push {r0, r1, r2, lr}
-    LDR r0, =STK_LOAD ;configure reload register to 24 000 ticks
-    LDR r1, =24000
-    str r1, [r0]
-    
-    LDR r0, =STK_VAL ; clear the value register
-    mov r1, #0
-    str r1, [r0]
-    
-    LDR R0, =STK_CTRL
-    mov r1, #STK_CTRL_TICKINT ; enable interrupt and the counter
-    MOV R2, #STK_CTRL_ENABLE
-    orr r1, r1, r2
-    mov r2, #STK_CTRL_CLKSOURCE
-    orr r1, r1, r2
-    STR r1,  [r0]   
-    
-    pop {r0,r1,r2,pc}
-    
 
-;**************************************************************************************************
-;* Jmeno funkce		: SysTick_Handler
-;* Popis			: Interrupt service routine for systick
-;* Vstup			: Zadny
-;* Vystup			: Zadny
-;**************************************************************************************************
-SysTick_Handler								; Navesti zacatku podprogramu
-; System clock runs at 24MHz speed
-    ldr r0, =0x20000000
-    ldr r1, [r0]
-    add r1, #1    
-    str r1, [r0]
-    bx lr
-    
-GetTick; returns the current time in ms
-    ldr r0, =0x20000000
-    ldr r0, [r0]
-    bx lr
-    
-TimeElapsed;(duration, start) returns one if the time given on r0 has elapsed since time given in r1
-    push {r2, lr}
-    
-    mov r2, r0; move the duration to r2
-    bl GetTick ; get the current time
-    sub r0, r0, r1; r0 = now() - start
-    cmp r0, r2
-    
-    mov r0, #0
-    movhs r0, #1 ; mov zero or one into the register r0
-    
-    pop {r2, pc}
-    
-;**************************************************************************************************
-;* Jmeno funkce		: DELAY
-;* Popis			: Softwarove zpozdeni procesoru
-;* Vstup			: R0 = pocet opakovani cyklu spozdeni
-;* Vystup			: Zadny
-;* Komentar			: Podprodram zpozdi prubech vykonavani programu	
-;**************************************************************************************************
-DELAY 									; Navesti zacatku podprogramu
-				PUSH	{R2,r1,lr}		; Ulozeni hodnoty R2 do zasobniku (R2 muze byt editovan)
-										; a ulozeni navratove adresy do zasobniku
-                
-                mov r2, r0 ; store the number of ms to wait
-                bl GetTick ; get the starting time
-                mov r1, r0
-                
-loop            mov r0, r2 ; get r0 = duration and r1 = starting timestamp
-                bl TimeElapsed
-                tst r0, r0 ; one is returned as true
-                beq loop ; loop if not enough time has passed
-	
-				POP		{R2,r1,PC}		; Navrat z podprogramu, obnoveni hodnoty R2 ze zasobniku
-										; a navratove adresy do PC
-
-;**************************************************************************************************
 				NOP
                 NOP
 				END	

@@ -1,0 +1,1 @@
+.\coreperipherals.o: CorePeripherals.s
