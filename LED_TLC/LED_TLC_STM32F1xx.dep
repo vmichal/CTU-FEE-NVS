@@ -1,5 +1,7 @@
 Dependencies for Project 'LED_TLC', Target 'STM32F1xx': (DO NOT MODIFY !)
 F (.\STM32F10x.s)(0x4BB1E524)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\stm32f10x.lst --xref -o .\stm32f10x.o --depend .\stm32f10x.d)
-F (.\LED_TLC.asm)(0x4D135E24)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\led_tlc.lst --xref -o .\led_tlc.o --depend .\led_tlc.d)
+F (.\LED_TLC.asm)(0x5F7BCDC8)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\led_tlc.lst --xref -o .\led_tlc.o --depend .\led_tlc.d)
 I (INI.s)(0x4D094786)
+I (CorePeripherals.s)(0x5F7BB4DE)
+F (.\CorePeripherals.s)(0x5F7BB4DE)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\coreperipherals.lst --xref -o .\coreperipherals.o --depend .\coreperipherals.d)
 F (.\ReadMe.txt)(0x4D13606E)()
