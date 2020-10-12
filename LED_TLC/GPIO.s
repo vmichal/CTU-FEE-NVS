@@ -37,7 +37,7 @@ ledGreenPort EQU GPIOC_BASE
 ledBluePin EQU 8
 ledGreenPin EQU 9
     
-debounceDelay EQU 100 ; in ms
+debounceDelay EQU 80 ; in ms
 
     EXPORT GPIO_CNF      
     EXPORT userButtonPressedFiltered

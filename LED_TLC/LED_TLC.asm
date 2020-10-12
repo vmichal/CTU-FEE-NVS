@@ -17,7 +17,10 @@
 ;* Poznamka			: Tento soubor obsahuje podrobny popis kodu vcetne vyznamu pouzitych instrukci
 ;*
 ;***************************************************************************************************
-				
+		AREA mojedata, DATA, NOINIT, READWRITE
+            
+lastUserButtonState SPACE 4
+                
 		AREA    STM32F1xx, CODE, READONLY  	; hlavicka souboru
 	
 		GET		INI.s					; vlozeni souboru s pojmenovanymi adresami
@@ -59,7 +62,11 @@ __main
 ;* Vystup			: Zadny
 ;***************************************************************************************************
 
-MAIN									; MAIN navesti hlavni smycky programu			
+MAIN									; MAIN navesti hlavni smycky programu
+                ldr r0, =lastUserButtonState 
+                mov r1, #0
+                str r1, [r0]
+
 
 				BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
 										; tj. skok na adresu s navestim RCC_CNF a ulozeni navratove 
@@ -94,16 +101,21 @@ AFTER
 ; Blikani LED, frekvence je dana registrem R3
 
 
+
 				; Testovani stisku tlacitka
                 bl userButtonPressedFiltered
+
+                ldr r2, =lastUserButtonState 
+                ldr r1, [r2]
+                
+                cmp r0, r1
+                BEQ		LOOP			; Skok na navesti LOOP, je-li vysledek predchozi operace roven 0
+										; tj. skok na LOOP pri nestisknutem tlacitku, jinak se pokracuje
+                str r0, [r2] ;store new button state
                 
                 tst r0, r0
-				BEQ		LOOP			; Skok na navesti LOOP, je-li vysledek predchozi operace roven 0
-										; tj. skok na LOOP pri nestisknutem tlacitku, jinak se pokracuje
-
-				; Prodleva pro osetreni zakmitu tlacitka
-				MOV		R0, #100			; Vlozeni hodnoty prodlevy do R0, tj. 50
-				BL		BlockingDelay			; Volani rutiny prodlevy, R0 je vtupni parametr DELAY
+                bne LOOP
+                
 
 				; Zmena modu blikani LED, vlozeni jine konstanty frekvence blikani do R3
  				TST		R3, #konst1		; Test puvodni hodnoty konstanty v R3, (R3 & 0x80000) nebo 
