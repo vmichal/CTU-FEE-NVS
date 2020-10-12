@@ -168,10 +168,10 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4096</DriverSelection>
+            <DriverSelection>4103</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
-          <Flash2>BIN\UL2CM3.DLL</Flash2>
+          <bUseTDR>1</bUseTDR>
+          <Flash2>STLink\ST-LINKIII-KEIL_SWO.dll</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
@@ -414,6 +414,26 @@
               <FileName>LED_TLC.asm</FileName>
               <FileType>2</FileType>
               <FilePath>.\LED_TLC.asm</FilePath>
+            </File>
+            <File>
+              <FileName>CorePeripherals.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\CorePeripherals.s</FilePath>
+            </File>
+            <File>
+              <FileName>SysTick.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\SysTick.s</FilePath>
+            </File>
+            <File>
+              <FileName>GPIO.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\GPIO.s</FilePath>
+            </File>
+            <File>
+              <FileName>RCC.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\RCC.s</FilePath>
             </File>
           </Files>
         </Group>

@@ -70,20 +70,20 @@ __main
 ;***************************************************************************************************
 
 MAIN									; MAIN navesti hlavni smycky programu
-                mov r1, #0
-                ldr r0, =lastUserButtonState 
-                str r1, [r0]; initialize lastUserButtonState to false
-                ldr r0, =systemStartTimestamp
-                str r1, [r0]
-                ldr r0, =systemActive
-                str r1, [r0]
+    mov r1, #0
+    ldr r0, =lastUserButtonState 
+    str r1, [r0]; initialize lastUserButtonState to false
+    ldr r0, =systemStartTimestamp
+    str r1, [r0]
+    ldr r0, =systemActive
+    str r1, [r0]
 
-				BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
+	BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
 										; tj. skok na adresu s navestim RCC_CNF a ulozeni navratove 
 										; adresy do LR (Link Register)
-                mov r0, #24000 ;24 000 cycles between SysTick interrupt (corresponds to 24MHz system clock)
-                bl STK_CONFIG
-				BL		GPIO_CNF		; Volani podprogramu konfigurace vyvodu procesoru
+    mov r0, #24000 ;24 000 cycles between SysTick interrupt (corresponds to 24MHz system clock)
+    bl STK_CONFIG
+	bl GPIO_CNF		; Volani podprogramu konfigurace vyvodu procesoru
 										; tj. skok na adresu s navestim GPIO_CNF 
 										;*!* Poznamka pri pouziti volani podprogramu instrukci BL nesmi
 										; byt v obsluze podprogramu tato instrukce jiz pouzita, nebot
@@ -91,69 +91,70 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
 
 LOOP                
-                bl userButtonPressedFiltered ; get current state into r0
-                ldr r1, = lastUserButtonState
-                ldr r2, [r1] ;load previous state into r2
+    bl userButtonPressedFiltered ; get current state into r0
+    ldr r1, = lastUserButtonState
+    ldr r2, [r1] ;load previous state into r2
                 
-                cmp r2, r0 ;if the current state is the same as the previous state 
+    cmp r2, r0 ;if the current state is the same as the previous state 
                 
-                beq BUTTON_CHECK_DONE; button state has not changed
-                str r0, [r1] ;store new valid state
+    beq BUTTON_CHECK_DONE; button state has not changed
+    str r0, [r1] ;store new valid state
                 
-                tst r0, r0 ;true iff button is pressed
-                
-                bne BUTTON_PRESSED
-                bl processButtonRelease
-                b BUTTON_CHECK_DONE
+    tst r0, r0 ;true iff button is pressed
+               
+    bne BUTTON_PRESSED
+    bl processButtonRelease
+    b BUTTON_CHECK_DONE
 BUTTON_PRESSED                
-                bl processButtonPress
+    bl processButtonPress
 BUTTON_CHECK_DONE
 
-                ldr r0, =systemActive
-                ldr r0, [r0]
-                tst r0, r0
-                beq LOOP ;if the system is not active, break
+    ldr r0, =systemActive
+    ldr r0, [r0]
+    tst r0, r0
+    beq LOOP ;if the system is not active, break
     ;check current time
-                ldr r0, =systemStartTimestamp
-                ldr r1, [r0]
-                bl GetTick; r0 == current tick, r1 == start tick
+    ldr r0, =systemStartTimestamp
+    ldr r1, [r0]
+    bl GetTick; r0 == current tick, r1 == start tick
                 
-                sub r2, r0, r1; t2 == time elapsed since start
-                mov r3, #tZAP
-                cmp r2, r3
-                bhs END_ACTIVE
+    sub r2, r0, r1; t2 == time elapsed since start
+    mov r3, #tZAP
+    cmp r2, r3
+    bhs END_ACTIVE
                 
-                bl getUninterruptedActiveTime
-                cmp r2, r0
-                blo LOOP ;uninterrupted time
+    bl getUninterruptedActiveTime
+    cmp r2, r0
+    blo LOOP ;uninterrupted time
                 
 BLINKING              
-                sub r2, r2, r0 ; r2 == only the extra time
-                mov r0, #tBlinkOff
-                mov r1, #tBlinkOn
-                add r0, r1
+    sub r2, r2, r0 ; r2 == only the extra time
+    mov r0, #tBlinkOff
+    mov r1, #tBlinkOn
+    add r0, r1
                 
-                udiv r1, r2, r0
-                mul r1, r0
-                sub r2, r1 ; r2 = r2 % r0
+    udiv r1, r2, r0
+    mul r1, r0
+    sub r2, r1 ; r2 = r2 % r0
+               
+    mov r1, #tBlinkOff
+    cmp r2, r1           
+               
+    bhs BLINK_ON
+    bl ledBlueOff
+    b LOOP
                 
-                mov r1, #tBlinkOff
-                cmp r2, r1
-                
-                bhs BLINK_ON
-                bl ledBlueOff
-                b LOOP
-                
-BLINK_ON        bl ledBlueOn                
-                b LOOP
+BLINK_ON
+    bl ledBlueOn                
+    b LOOP
 END_ACTIVE
-                ldr r0, =systemActive
-                mov r1, #0
-                str r1, [r0] ;mark the system as not active
-                bl ledGreenOff ;turn off active indicator
-                bl ledBlueOff ;
+    ldr r0, =systemActive
+    mov r1, #0
+    str r1, [r0] ;mark the system as not active
+    bl ledGreenOff ;turn off active indicator
+    bl ledBlueOff ;
                 
-                b LOOP
+    b LOOP
 				
 processButtonPress
     push {lr}
