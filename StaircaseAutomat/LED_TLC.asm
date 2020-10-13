@@ -1,27 +1,17 @@
 ;***************************************************************************************************
-;*
-;* Misto			: CVUT FEL, Katedra Mereni
-;* Prednasejici		: Doc. Ing. Jan Fischer,CSc.
-;* Predmet			: A4M38AVS
 ;* Vyvojovy Kit		: STM32 VL DISCOVERY (STM32F100RB)
 ;*
 ;**************************************************************************************************
 ;*
 ;* JMÉNO SOUBORU	: LED_TLC.ASM
-;* AUTOR			: Michal TOMÁŠ
-;* DATUM			: 12/2010
-;* POPIS			: Program pro stridave blikani LED na vyvodech PC8 a PC9 se dvema mody ovladanymi tlacitkem.
-;*					  - konfigurace hodin na frekvenci 24MHz (HSE + PLL) 
-;*					  - konfigurace pouzitych vyvodu procesotu (PC8 a PC9 jako vystup, PA0 jako vstup)
-;*					  - rozblikani LED na PC8 a PC9, cteni stavu tlacitka a prepinani modu blikani
-;* Poznamka			: Tento soubor obsahuje podrobny popis kodu vcetne vyznamu pouzitych instrukci
-;*
+;* AUTOR			: Vojtech Michal based on Michal TOMÁŠ's work
 ;***************************************************************************************************
 		AREA mojedata, DATA, NOINIT, READWRITE
             
-lastUserButtonState SPACE 4
-systemStartTimestamp SPACE 4
-systemActive SPACE 4
+; previous known state of the user button. If it differs from filtered value, it implies that an edge occured
+lastUserButtonState SPACE 4 
+systemStartTimestamp SPACE 4 ;timestamp when the blue LED was turned on.
+systemActive SPACE 4 ;true iff the automat is currently on (blue LED turned on)
                 
 		AREA    STM32F1xx, CODE, READONLY  	; hlavicka souboru
 	
@@ -33,7 +23,9 @@ systemActive SPACE 4
 tZAP  EQU 5000 ; 5 seconds turned on
 tBlinkOff EQU 100 ; indicates that the device is going to shut down soon
 tBlinkOn EQU 500 ;
-kBlinkCount EQU 4;
+tBlinkPeriod EQU tBlinkOff + tBlinkOn
+kBlinkCount EQU 4;how many times the LED blinks
+tBlinkingLength EQU tBlinkPeriod * kBlinkCount
 
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 
@@ -70,6 +62,7 @@ __main
 ;***************************************************************************************************
 
 MAIN									; MAIN navesti hlavni smycky programu
+    ;clears variables in data
     mov r1, #0
     ldr r0, =lastUserButtonState 
     str r1, [r0]; initialize lastUserButtonState to false
@@ -90,17 +83,17 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
 
-LOOP                
+LOOP ;main application loop                
     bl userButtonPressedFiltered ; get current state into r0
     ldr r1, = lastUserButtonState
     ldr r2, [r1] ;load previous state into r2
                 
     cmp r2, r0 ;if the current state is the same as the previous state 
                 
-    beq BUTTON_CHECK_DONE; button state has not changed
+    beq BUTTON_CHECK_DONE; button state has not changed, skip button validation
     str r0, [r1] ;store new valid state
                 
-    tst r0, r0 ;true iff button is pressed
+    tst r0, r0 ;true (not zero) iff button is pressed
                
     bne BUTTON_PRESSED
     bl processButtonRelease
@@ -121,24 +114,22 @@ BUTTON_CHECK_DONE
     sub r2, r0, r1; t2 == time elapsed since start
     mov r3, #tZAP
     cmp r2, r3
-    bhs END_ACTIVE
+    bhs END_ACTIVE ;enough time has elapsed, turn the automat off
                 
     bl getUninterruptedActiveTime
     cmp r2, r0
     blo LOOP ;uninterrupted time
                 
-BLINKING              
+BLINKING    ;the active duration is nearing the end and we have to blink the LED
     sub r2, r2, r0 ; r2 == only the extra time
-    mov r0, #tBlinkOff
-    mov r1, #tBlinkOn
-    add r0, r1
+    mov r0, #tBlinkPeriod
                 
-    udiv r1, r2, r0
+    udiv r1, r2, r0 ;elapsed time / length of blink period will give us the number of finished periods
     mul r1, r0
-    sub r2, r1 ; r2 = r2 % r0
+    sub r2, r1 ; r2 holds the number of ms in the current blink period.
                
     mov r1, #tBlinkOff
-    cmp r2, r1           
+    cmp r2, r1 ; determine whether we are in the on or off part of blinkgin period    
                
     bhs BLINK_ON
     bl ledBlueOff
@@ -164,10 +155,11 @@ processButtonPress
 processButtonRelease
     push {r0, r1, lr}
     bl ledBlueOn
+    bl ledGreenOn            
     
     ldr r0, = systemActive
     mov r1, #1
-    str r1, [r0] ; store systemActive == true
+    str r1, [r0] ; store systemActive as true
     
     bl GetTick
     ldr r1, =systemStartTimestamp
@@ -176,14 +168,10 @@ processButtonRelease
     pop {r0, r1, pc}                
     
 ;returns the number of ms, how long the system has to be active (led turned on) before blinking starts
+; computed as period length * blink count, where period length = LEDonTime + LEDoffTime
+; and blink count stores the number of 
 getUninterruptedActiveTime
-    push {r1-r3,lr}
-    mov r0, #tBlinkOn
-    mov r1, #tBlinkOff
-    add r0, r1
-    mov r1, #kBlinkCount
-    mul r0, r1
-    mov r1, #tZAP
-    sub r0, r1, r0
-    pop {r1-r3, pc}
+    mov r0, #tBlinkingLength
+    bx lr
                 END	
+                    

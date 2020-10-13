@@ -125,7 +125,7 @@ userButtonPressedFiltered								; Navesti zacatku podprogramu
 ;* Jmeno funkce		: userButtonSample
 ;* Popis			: 
 ;* Vstup			: Zadny
-;* Vystup			: r0 .. 1 iff button is presseed
+;* Vystup			: r0 .. 1 iff button is pressed
 ;**************************************************************************************************
 userButtonSample								
     push {r0,r1,r2 ,r3, lr}
@@ -159,7 +159,7 @@ SAME ; if the state has been stable for long enough, save it
     tst r0, r0
     ; if r0 != 0 then the button has been stable for a while. Otherwise return the other option
     
-    popeq {r0,r1,r2 ,r3, pc}; return iff the button has nott been stable
+    popeq {r0,r1,r2 ,r3, pc}; return iff the button has not been stable
 
     ldr r0, = userButtonPressedCache
     ldr r0, [r0]
@@ -173,8 +173,8 @@ SAME ; if the state has been stable for long enough, save it
     
     
 ;**************************************************************************************************
-;* Jmeno funkce		: ledBlueOn
-;* Popis			: Turns the blue LED on
+;* Jmeno funkce		: led(Blue|Green)(On|Off)
+;* Popis			: Turns the blue of green LED on or off
 ;* Vstup			: Zadny
 ;* Vystup			: None
 ;**************************************************************************************************
