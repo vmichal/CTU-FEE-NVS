@@ -12,7 +12,8 @@
 lastUserButtonState SPACE 4 
 systemStartTimestamp SPACE 4 ;timestamp when the blue LED was turned on.
 systemActive SPACE 4 ;true iff the automat is currently on (blue LED turned on)
-                
+tZap SPACE 4; hold the currently configured length of active state
+
 		AREA    STM32F1xx, CODE, READONLY  	; hlavicka souboru
 	
 		GET		INI.s					; vlozeni souboru s pojmenovanymi adresami
@@ -20,13 +21,45 @@ systemActive SPACE 4 ;true iff the automat is currently on (blue LED turned on)
         GET		CorePeripherals.s	
         
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
-tZAP  EQU 5000 ; 5 seconds turned on
-tBlinkOff EQU 100 ; indicates that the device is going to shut down soon
-tBlinkOn EQU 500 ;
-tBlinkPeriod EQU tBlinkOff + tBlinkOn
-kBlinkCount EQU 4;how many times the LED blinks
-tBlinkingLength EQU tBlinkPeriod * kBlinkCount
+tZAPdefault  EQU 5000 ; 5 seconds turned on
+ 
+segmentA EQU 1 << 7
+segmentB EQU 1 << 6
+segmentC EQU 1 << 5
+segmentD EQU 1 << 4
+segmentE EQU 1 << 3
+segmentF EQU 1 << 2
+segmentG EQU 1 << 1
+segmentDP EQU 1 << 0
 
+
+segmentsThreeLines EQU segmentA :OR: segmentG :OR: segmentD;
+number0 EQU segmentA :OR: segmentB :OR: segmentC :OR: segmentD :OR: segmentE :OR: segmentF ;0
+number1 EQU segmentB :OR: segmentC ;1
+number2 EQU segmentsThreeLines :OR: segmentB :OR: segmentE ;2
+number3 EQU segmentsThreeLines :OR: segmentB :OR: segmentC;3
+number4 EQU number1 :OR: segmentF :OR: segmentG ;4
+number5 EQU segmentsThreeLines :OR: segmentC:OR: segmentF ;5
+number6 EQU number5 :OR: segmentE ;6
+number7 EQU number1 :OR: segmentA;7
+number8 EQU number0 :OR: segmentG;8
+number9 EQU number4 :OR: segmentA :OR: segmentD;
+number10 EQU number0;10
+        
+displayNumbers
+    DCD ~number0
+    DCD ~number1
+    DCD ~number2
+    DCD ~number3
+    DCD ~number4
+    DCD ~number5
+    DCD ~number6
+    DCD ~number7
+    DCD ~number8
+    DCD ~number9
+    DCD ~number10
+        
+        
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 
 
@@ -82,7 +115,7 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; byt v obsluze podprogramu tato instrukce jiz pouzita, nebot
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
-
+    bl initSPI
 LOOP ;main application loop                
     bl userButtonPressedFiltered ; get current state into r0
     ldr r1, = lastUserButtonState
@@ -116,7 +149,7 @@ BUTTON_CHECK_DONE
     cmp r2, r3
     bhs END_ACTIVE ;enough time has elapsed, turn the automat off
                 
-    bl getUninterruptedActiveTime
+    mov r0, #tBlinkingLength
     cmp r2, r0
     blo LOOP ;uninterrupted time
                 
@@ -152,7 +185,7 @@ END_ACTIVE
 				
 processButtonPress
     push {lr}
-    bl ledGreenOn            
+    bl ledGreenOn
     pop {pc}
     
 processButtonRelease
@@ -170,11 +203,30 @@ processButtonRelease
             
     pop {r0, r1, pc}                
     
-;returns the number of ms, how long the system has to be active (led turned on) before blinking starts
-; computed as period length * blink count, where period length = LEDonTime + LEDoffTime
-; and blink count stores the number of 
-getUninterruptedActiveTime
-    mov r0, #tBlinkingLength
+    
+initSPI ;initialize SPI2 connected to the 7segment shift register
+    push {r0-r1}
+    
+    ldr r0, =SPI2_BASE
+    ;set SPI as master (bit 2) and enable it
+    ; make the peripheral send LSB first
+    ; use only one direction of data transfer (from MISO to the shift register)
+    ldr r1, = (1 :SHL:2) :OR: (1 :SHL: 6) :OR: (1 :SHL: 7) :OR: (3 :SHL: 14)
+    str r1, [r0, #SPI_CR1_o]
+    mov r1, #0xff
+    str r1, [r0, #SPI_DR_o]
+    pop {r0-r1}
+    bx lr
+    
+update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, decimal point ... msb)
+    push {r0-r3}
+    mov r2, #4
+    mul r0, r2
+    ldr r2, =displayNumbers
+    ldr r2, [r2, r0]
+    ldr r1, =SPI2_BASE
+    strh r2, [r1, #SPI_DR_o] ; store the new byte to be sent
+    pop {r0-r3}
     bx lr
                 END	
                     

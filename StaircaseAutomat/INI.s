@@ -22,6 +22,13 @@ GPIO_IDR_o EQU 0x8
 GPIO_ODR_o EQU 0xc
 GPIO_BSRR_o EQU 0x10
 GPIO_BRR_o EQU 0x14
+    
+SPI2_BASE           EQU     0x40003800
+    
+SPI_CR1_o EQU 0x0
+SPI_CR2_o EQU 0x4
+SPI_SR_o EQU 0x8
+SPI_DR_o EQU 0xc
 
 
 ;********************************************************************************

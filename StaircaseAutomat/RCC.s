@@ -87,9 +87,13 @@ NO_PLL_RDY		LDR		R1, [R0]		; Nacteni stavu registru RCC_CR do R1
 
 				LDR		R0, =RCC_APB2ENR; Kopie adresy RCC_APB2ENR (APB2 peripheral clock enable register) do R0  
 				LDR		R1, [R0]		; Nacteni stavu registru RCC_APB2ENR do R1
-				LDR		R2, =0x14		; Konstanta pro zapnuti hodin pro branu A a C
+				LDR		R2, =0x1c		; Konstanta pro zapnuti hodin pro branu A a C
 				ORR		R1, R1, R2		; Maskovani		
 				STR		R1, [R0]		; Ulozeni nove hodnoty
+                ldr r0, =RCC_APB1ENR
+                ldr r1, [r0]
+                orr r1, #1:SHL:14; SPI2 clock enable
+                str r1, [r0]
 
 				BX		LR				; Navrat z podprogramu, skok na adresu v LR
  

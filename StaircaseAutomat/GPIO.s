@@ -37,6 +37,9 @@ ledGreenPort EQU GPIOC_BASE
 ledBluePin EQU 8
 ledGreenPin EQU 9
     
+spiClockPin EQU 13
+spiDataPin EQU 15
+    
 debounceDelay EQU 80 ; in ms
 
     EXPORT GPIO_CNF      
@@ -76,6 +79,17 @@ GPIO_CNF								; Navesti zacatku podprogramu
 				MOV		R2, #0x8		; Vlozeni 1 do R2
 				ORR		R1, R1, R2		; maskovani, bit 0 nastven jako push-pull vstup
 				STR		R1, [R0]		; Ulozeni konfigurace PAO0
+                
+                ;both PB13 and PB15 must be ouput alternate funciton push-pull for SPI
+                ldr r0, =GPIOB_BASE
+                ldr r1, [r0, #GPIO_CRH_o]
+                ;mask clearing configuration of pins for spi data and spi clock
+                ldr r2, =(0xf << ((spiClockPin - 8)*4)) :OR: (0xf << ((spiDataPin - 8)*4))
+                bic r1, r2
+                ldr r2, =(0xd << ((spiClockPin - 8)*4)) :OR: (0xd << ((spiDataPin - 8)*4))
+                orr r1, r2
+                str r1, [r0, #GPIO_CRH_o]
+
                 
                 ;initialize variables
                 bl GetTick
