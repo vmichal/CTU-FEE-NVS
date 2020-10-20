@@ -142,7 +142,10 @@ END_ACTIVE
     ldr r0, =systemActive
     mov r1, #0
     str r1, [r0] ;mark the system as not active
-    bl ledGreenOff ;turn off active indicator
+    bl userButtonPressedFiltered;
+    tst r0,r0
+    it eq
+    bleq ledGreenOff ;turn off active indicator only if the user button is not pressed
     bl ledBlueOff ;
                 
     b LOOP
