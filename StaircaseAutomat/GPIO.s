@@ -23,6 +23,20 @@
 userButtonPressedStart SPACE 4
 userButtonPressedCache SPACE 4
 userButtonLastValidState SPACE 4
+    
+    
+OkPressedStart SPACE 4
+OkPressedCache SPACE 4
+OkLastValidState SPACE 4
+    
+    
+PlusPressedStart SPACE 4
+PlusPressedCache SPACE 4
+PlusLastValidState SPACE 4
+    
+MinusPressedStart SPACE 4
+MinusPressedCache SPACE 4
+MinusLastValidState SPACE 4
                 
 		AREA    GPIO_Driver, CODE, READONLY  	; hlavicka souboru
 	
@@ -31,7 +45,14 @@ userButtonLastValidState SPACE 4
 
 userButtonPort EQU GPIOA_BASE ;User button is connected to PA0
 userButtonPin EQU 0
-    
+
+PlusPort EQU GPIOB_BASE
+PlusPin EQU 8   
+MinusPort EQU GPIOB_BASE
+MinusPin EQU 9
+OkPort EQU GPIOA_BASE
+OkPin EQU 11
+
 ledBluePort EQU GPIOC_BASE
 ledGreenPort EQU GPIOC_BASE
 ledBluePin EQU 8
@@ -90,18 +111,39 @@ GPIO_CNF								; Navesti zacatku podprogramu
                 orr r1, r2
                 str r1, [r0, #GPIO_CRH_o]
 
+                ;configure PA11 as input pullup/pulldown
+                ldr r0, =GPIOA_BASE
+                ldr r1, [r0, #GPIO_CRH_o]
+                ldr r2, = 0xf << ((OkPin - 8)*4)
+                bic r1, r2
+                ldr r2, = 0x8 << ((OkPin - 8)*4)
+                orr r1, r2
+                str r1, [r0, #GPIO_CRH_o]
+                ldr r1, [r0, #GPIO_ODR_o]
+                orr r1, #1 :SHL: OkPin
+                str r1, [r0, #GPIO_ODR_o]
+                
+                ;configure PB8 and PB9 as input pullup/pulldown
+                ldr r0, =GPIOB_BASE
+                ldr r1, [r0, #GPIO_CRH_o]
+                ldr r2, = 0xf << ((MinusPin - 8)*4) :OR: 0xf << ((PlusPin - 8)*4)
+                bic r1, r2
+                ldr r2, = 0x8 << ((MinusPin - 8)*4) :OR: 0x8 << ((PlusPin - 8)*4)
+                orr r1, r2
+                str r1, [r0, #GPIO_CRH_o]
+                ldr r1, [r0, #GPIO_ODR_o]
+                orr r1, #(1 :SHL: PlusPin) :OR: (1 :SHL: MinusPin)
+                str r1, [r0, #GPIO_ODR_o]
                 
                 ;initialize variables
-                bl GetTick
-                sub r0, #debounceDelay
-                ldr r1, =userButtonPressedStart
-                str r0, [r1]
+                ldr r0, = userButtonPressedStart
+                ldr r1, = MinusLastValidState
+                mov r2, #0
                 
-                ldr r0,=userButtonPressedCache
-                mov r1, #0
-                str r1, [r0]
-                ldr r0, =userButtonLastValidState
-                str r1, [r0]
+LOOP
+                str r2, [r0], #4
+                cmp r0, r1
+                ble LOOP
                 
                 pop {pc}
                 

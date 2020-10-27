@@ -9,9 +9,12 @@
 		AREA mojedata, DATA, NOINIT, READWRITE
             
 ; previous known state of the user button. If it differs from filtered value, it implies that an edge occured
-lastUserButtonState SPACE 4 
+lastStart SPACE 4 
+lastOK SPACE 4
+lastPlus SPACE 4
+lastMinus SPACE 4
 systemStartTimestamp SPACE 4 ;timestamp when the blue LED was turned on.
-systemActive SPACE 4 ;true iff the automat is currently on (blue LED turned on)
+systemState SPACE 4 ;holds constant representing the current system state
 tZap SPACE 4; hold the currently configured length of active state
 
 		AREA    STM32F1xx, CODE, READONLY  	; hlavicka souboru
@@ -21,7 +24,9 @@ tZap SPACE 4; hold the currently configured length of active state
         GET		CorePeripherals.s	
         
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
-tZAPdefault  EQU 5000 ; 5 seconds turned on
+tZAPdefault  EQU 5 ; 5 seconds turned on
+tIdleBlink EQU 1000;
+tConfigBlink EQU 400;
     
 ;state machine constants
 stateActive EQU 0; lights are on
@@ -104,12 +109,22 @@ __main
 MAIN									; MAIN navesti hlavni smycky programu
     ;clears variables in data
     mov r1, #0
-    ldr r0, =lastUserButtonState 
-    str r1, [r0]; initialize lastUserButtonState to false
+    ldr r0, =lastStart 
+    str r1, [r0]; initialize lastStart to false
+    ldr r0, =lastOK
+    str r1, [r0]; initialize lastOK to false
+    ldr r0, =lastPlus
+    str r1, [r0]; initialize lastPlus to false
+    ldr r0, =lastMinus
+    str r1, [r0]; initialize lastMinus to false
+
     ldr r0, =systemStartTimestamp
     str r1, [r0]
-    ldr r0, =systemActive
+    
+    ldr r0, =systemState
+    mov r1, #stateIdle
     str r1, [r0]
+    
     ldr r0, =tZap
     mov r1, #tZAPdefault
     str r1, [r0]
@@ -126,11 +141,13 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
     bl initSPI
-    mov r0, #0
-    bl drawNumber
+    mov r0, #tZAPdefault
+    bl getNumberSegments
+    bic r0, #segmentDP
+    bl update7segment
 LOOP ;main application loop                
     bl userButtonPressedFiltered ; get current state into r0
-    ldr r1, = lastUserButtonState
+    ldr r1, = lastStart
     ldr r2, [r1] ;load previous state into r2
                 
     cmp r2, r0 ;if the current state is the same as the previous state 
@@ -151,21 +168,23 @@ BUTTON_CHECK_DONE
     
 deactivateSystem
     push {r0-r1,lr}
-    ldr r0, =systemActive
-    mov r1, #0
+    ldr r0, =systemState
+    mov r1, #stateIdle
     str r1, [r0] ;mark the system as not active
     bl userButtonPressedFiltered;
     tst r0,r0
     it eq
     bleq ledGreenOff ;turn off active indicator only if the user button is not pressed
     bl ledBlueOff ;
+    mov r0, #~0
+    bl update7segment
                 
     pop {r0-r1, pc}
 				
 activateSystem
     push {r0-r1, lr}
-    ldr r0, = systemActive
-    mov r1, #1
+    ldr r0, = systemState
+    mov r1, #stateActive
     str r1, [r0] ; store systemActive as true
     
     bl GetTick
@@ -174,11 +193,22 @@ activateSystem
 
     ldr r0, =tZap
     ldr r0, [r0]
-    mov r1, #1000
-    udiv r0, r0, r1
+
     bl update7segment
 
     pop {r0-r1, pc}
+    
+enterConfig
+    push {r1-r3, lr}
+    ldr r0, =systemState
+    mov r1, #stateConfiguration
+    str r1, [r0]
+    
+    ldr r0, =tZap
+    ldr r0, [r0]
+    bic r0, #segmentDP
+    bl update7segment    
+    pop {r1-r3, pc}
     
 processButtonPress
     push {lr}
@@ -221,20 +251,17 @@ clamp;(r0 value, r1 min, r2 max)
     movle r0, r1
     
     bx lr
-
-drawNumber;(r0 ... positive number from interval <0, 10>)
-    push {r0-r3, lr}
-    mov r1, #0
-    mov r2, #10
-    bl clamp
+    
+getNumberSegments;(r0 .. positive number from interval <0, 10>)
+    push {r1-r3, lr}
+    mov r1, #10+1
+    bl modulo
     
     mov r2, #4
     mul r0, r2
     ldr r2, =displayNumbers
     ldr r0, [r2, r0]
-    bl update7segment
-    pop {r0-r3, pc}
-    
+    pop {r1-r3, pc}
 
 update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, decimal point ... msb)
     push {r1, lr}
@@ -244,30 +271,119 @@ update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, deci
     
 applicationTick
     push {r0-r3,lr}
-    ldr r0, =systemActive
-    ldr r0, [r0]
-    tst r0, r0
-    it eq
-    popeq {r0-r3,pc} ; if the system is not active, returns
+    ldr r0, =systemState
+    ldr r0, [r0] ;r0 = current state
     
+    cmp r0, #stateIdle; we have nothing to do ... just blink decimal point
+    beq HANDLE_IDLE
+    
+    cmp r0, #stateConfiguration
+    beq HANDLE_CONFIG
+
+    ;the system is active
     bl GetTick;
     ldr r1, =systemStartTimestamp
     ldr r1, [r1]
     sub r0, r1 ; r0= elapsed ms
     ldr r1, =tZap
     ldr r1, [r1]
+    mov r2, #1000
+    mul r1, r2
     sub r0, r1, r0; r0 = ms remaining
     
     cmp r0, #0
     bge UPDATE_7_SEGMENT
     bl deactivateSystem
     
+HANDLE_CONFIG
+    bl GetTick
+    mov r1, #tConfigBlink
+    mov r3, r0
+    bl isDivisible
+    tst r0, r0
+    
+    it ne
+    popne {r0-r3, pc}
+    mov r0, r3
+    mov r1, #tConfigBlink*2
+    bl isDivisible
+    mov r3, r0
+    
+    ldr r0, =tZap
+    ldr r0, [r0]
+    bl getNumberSegments
+    
+    tst r3, r3
+    
+    mov r1, #~segmentDP
+    it eq
+    biceq r1, r0
+    mov r0, r1
+    bl update7segment
+    pop {r0-r3, pc}
+    
+    
+SHALL_DRAW    
+    ldr r0, =tZap
+    ldr r0, [r0]
+    bl getNumberSegments
+    bl update7segment
+    pop {r0-r3, pc}
+    
+    
+HANDLE_IDLE
+    bl GetTick
+    mov r1, #tIdleBlink
+    mov r3, r0
+    bl isDivisible
+    tst r0, r0
+
+
+
+    it ne
+    popne {r0-r3, pc}
+    
+    ldr r0, =tZap
+    ldr r0, [r0]
+    bl getNumberSegments
+    mov r7, r0
+
+    mov r0, r3
+    mov r1, #tIdleBlink*2
+    bl isDivisible
+    tst r0, r0
+    
+    mov r0, r7
+    it eq
+    biceq r0, #segmentDP  
+    bl update7segment
+    pop {r0-r3, pc}
+    
+    
 UPDATE_7_SEGMENT
     
     add r0, #500 ;nice delay so that the initial 5 is visible
     mov r1, #1000
     udiv r0, r0, r1
-    bl drawNumber    
+    bl getNumberSegments
+    bl update7segment
     pop {r0-r3, pc}
-                END	
+
+modulo; returns r0 % r1
+    push {r1-r2, lr}
+    udiv r2, r0, r1
+    mul r2, r1
+    sub r0, r2
+    pop {r1-r2, pc}
+
+isDivisible;(r0 what, r1 divider)
+    push {r1-r2, lr}
+    bl modulo
+    tst r0, r0
+    ite eq
+    moveq r0, #0
+    movne r0, #1
+    pop {r1-r2, pc}    
+
+    END	
                     

@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\StaircaseAutomat.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\StaircaseAutomat.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 27 02:13:36 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 27 03:38:32 2020
 <BR><P>
 <H3>Maximum Stack Usage =          0 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -333,7 +333,6 @@ Global Symbols
 <P><STRONG><a name="[41]"></a>GetTick</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
 <BR><BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
 <LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIO_CNF
 <LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
 <LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;applicationTick
 <LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
@@ -352,9 +351,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[3d]"></a>GPIO_CNF</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
-</UL>
-<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 
 <P><STRONG><a name="[3e]"></a>userButtonPressedFiltered</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
