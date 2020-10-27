@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\StaircaseAutomat.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\StaircaseAutomat.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 20 20:26:22 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 27 02:13:36 2020
 <BR><P>
 <H3>Maximum Stack Usage =          0 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -12,22 +12,23 @@ Call chain for Maximum Stack Depth:</H3>
 <H3>
 Functions with no stack information
 </H3><UL>
- <LI><a href="#[39]">__user_initial_stackheap</a>
+ <LI><a href="#[3a]">__user_initial_stackheap</a>
  <LI><a href="#[37]">__main</a>
  <LI><a href="#[38]">__use_two_region_memory</a>
- <LI><a href="#[3b]">STK_CONFIG</a>
+ <LI><a href="#[39]">applicationTick</a>
+ <LI><a href="#[3c]">STK_CONFIG</a>
  <LI><a href="#[9]">SysTick_Handler</a>
- <LI><a href="#[3e]">GetTick</a>
- <LI><a href="#[44]">TimeElapsed</a>
- <LI><a href="#[45]">BlockingDelay</a>
- <LI><a href="#[3c]">GPIO_CNF</a>
- <LI><a href="#[3d]">userButtonPressedFiltered</a>
- <LI><a href="#[43]">userButtonSample</a>
- <LI><a href="#[40]">ledBlueOn</a>
+ <LI><a href="#[41]">GetTick</a>
+ <LI><a href="#[45]">TimeElapsed</a>
+ <LI><a href="#[46]">BlockingDelay</a>
+ <LI><a href="#[3d]">GPIO_CNF</a>
+ <LI><a href="#[3e]">userButtonPressedFiltered</a>
+ <LI><a href="#[44]">userButtonSample</a>
+ <LI><a href="#[43]">ledBlueOn</a>
  <LI><a href="#[42]">ledGreenOn</a>
- <LI><a href="#[3f]">ledBlueOff</a>
- <LI><a href="#[41]">ledGreenOff</a>
- <LI><a href="#[3a]">RCC_CNF</a>
+ <LI><a href="#[40]">ledBlueOff</a>
+ <LI><a href="#[3f]">ledGreenOff</a>
+ <LI><a href="#[3b]">RCC_CNF</a>
 </UL>
 </UL>
 <P>
@@ -297,69 +298,77 @@ Global Symbols
 <P><STRONG><a name="[a]"></a>WWDG_IRQHandler</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, stm32f10x.o(.text))
 <BR>[Address Reference Count : 1]<UL><LI> stm32f10x.o(RESET)
 </UL>
-<P><STRONG><a name="[39]"></a>__user_initial_stackheap</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, stm32f10x.o(.text), UNUSED, KEPT)
+<P><STRONG><a name="[3a]"></a>__user_initial_stackheap</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, stm32f10x.o(.text), UNUSED, KEPT)
 
 <P><STRONG><a name="[37]"></a>__main</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonPressedFiltered
+<BR><BR>[Calls]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonPressedFiltered
 <LI><a href="#[42]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledGreenOn
-<LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledGreenOff
-<LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledBlueOn
-<LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledBlueOff
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;STK_CONFIG
-<LI><a href="#[3a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RCC_CNF
-<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
-<LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIO_CNF
+<LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledGreenOff
+<LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledBlueOn
+<LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledBlueOff
+<LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;STK_CONFIG
+<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RCC_CNF
+<LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIO_CNF
 </UL>
 
 <P><STRONG><a name="[38]"></a>__use_two_region_memory</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI), UNUSED, KEPT)
 
-<P><STRONG><a name="[3b]"></a>STK_CONFIG</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
-<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
-</UL>
-
-<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
-</UL>
-<BR>[Address Reference Count : 1]<UL><LI> stm32f10x.o(RESET)
-</UL>
-<P><STRONG><a name="[3e]"></a>GetTick</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
-<BR><BR>[Called By]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
-<LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
-<LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIO_CNF
-<LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
-<LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
-</UL>
-
-<P><STRONG><a name="[44]"></a>TimeElapsed</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
-</UL>
-<BR>[Called By]<UL><LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
-<LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
-</UL>
-
-<P><STRONG><a name="[45]"></a>BlockingDelay</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI), UNUSED)
-<BR><BR>[Calls]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
-<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
-</UL>
-
-<P><STRONG><a name="[3c]"></a>GPIO_CNF</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
-</UL>
-<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
-</UL>
-
-<P><STRONG><a name="[3d]"></a>userButtonPressedFiltered</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
-<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
-</UL>
-
-<P><STRONG><a name="[43]"></a>userButtonSample</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
-<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+<P><STRONG><a name="[39]"></a>applicationTick</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
 </UL>
 <BR>[Called By]<UL><LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTick_Handler
 </UL>
 
-<P><STRONG><a name="[40]"></a>ledBlueOn</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<P><STRONG><a name="[3c]"></a>STK_CONFIG</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+
+<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
+<LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;applicationTick
+</UL>
+<BR>[Address Reference Count : 1]<UL><LI> stm32f10x.o(RESET)
+</UL>
+<P><STRONG><a name="[41]"></a>GetTick</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
+<LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
+<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIO_CNF
+<LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
+<LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;applicationTick
+<LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+
+<P><STRONG><a name="[45]"></a>TimeElapsed</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+</UL>
+<BR>[Called By]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
+<LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
+</UL>
+
+<P><STRONG><a name="[46]"></a>BlockingDelay</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI), UNUSED)
+<BR><BR>[Calls]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
+<LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+</UL>
+
+<P><STRONG><a name="[3d]"></a>GPIO_CNF</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+</UL>
+<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+
+<P><STRONG><a name="[3e]"></a>userButtonPressedFiltered</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+
+<P><STRONG><a name="[44]"></a>userButtonSample</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<BR><BR>[Calls]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
+<LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
+</UL>
+<BR>[Called By]<UL><LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTick_Handler
+</UL>
+
+<P><STRONG><a name="[43]"></a>ledBlueOn</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
 <BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 
@@ -367,15 +376,15 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 
-<P><STRONG><a name="[3f]"></a>ledBlueOff</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<P><STRONG><a name="[40]"></a>ledBlueOff</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
 <BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 
-<P><STRONG><a name="[41]"></a>ledGreenOff</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<P><STRONG><a name="[3f]"></a>ledGreenOff</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
 <BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 
-<P><STRONG><a name="[3a]"></a>RCC_CNF</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rcc.o(STM32F10x_INI))
+<P><STRONG><a name="[3b]"></a>RCC_CNF</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rcc.o(STM32F10x_INI))
 <BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 <P>

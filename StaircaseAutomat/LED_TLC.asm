@@ -22,7 +22,13 @@ tZap SPACE 4; hold the currently configured length of active state
         
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 tZAPdefault  EQU 5000 ; 5 seconds turned on
- 
+    
+;state machine constants
+stateActive EQU 0; lights are on
+stateConfiguration EQU 1; service buttons are being used
+stateIdle EQU 2; we are waiting for user input
+
+
 segmentA EQU 1 << 7
 segmentB EQU 1 << 6
 segmentC EQU 1 << 5
@@ -66,6 +72,7 @@ displayNumbers
 											
 		EXPORT	__main					; export navesti pouzivaneho v jinem souboru, zde konkretne
 		EXPORT	__use_two_region_memory	; jde o navesti, ktere pouziva startup code STM32F10x.s
+        export applicationTick
 
         IMPORT STK_CONFIG
         IMPORT BlockingDelay
@@ -103,6 +110,9 @@ MAIN									; MAIN navesti hlavni smycky programu
     str r1, [r0]
     ldr r0, =systemActive
     str r1, [r0]
+    ldr r0, =tZap
+    mov r1, #tZAPdefault
+    str r1, [r0]
 
 	BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
 										; tj. skok na adresu s navestim RCC_CNF a ulozeni navratove 
@@ -116,6 +126,8 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
     bl initSPI
+    mov r0, #0
+    bl drawNumber
 LOOP ;main application loop                
     bl userButtonPressedFiltered ; get current state into r0
     ldr r1, = lastUserButtonState
@@ -135,43 +147,10 @@ BUTTON_PRESSED
     bl processButtonPress
 BUTTON_CHECK_DONE
 
-    ldr r0, =systemActive
-    ldr r0, [r0]
-    tst r0, r0
-    beq LOOP ;if the system is not active, break
-    ;check current time
-    ldr r0, =systemStartTimestamp
-    ldr r1, [r0]
-    bl GetTick; r0 == current tick, r1 == start tick
-                
-    sub r2, r0, r1; t2 == time elapsed since start
-    mov r3, #tZAP
-    cmp r2, r3
-    bhs END_ACTIVE ;enough time has elapsed, turn the automat off
-                
-    mov r0, #tBlinkingLength
-    cmp r2, r0
-    blo LOOP ;uninterrupted time
-                
-BLINKING    ;the active duration is nearing the end and we have to blink the LED
-    sub r2, r2, r0 ; r2 == only the extra time
-    mov r0, #tBlinkPeriod
-                
-    udiv r1, r2, r0 ;elapsed time / length of blink period will give us the number of finished periods
-    mul r1, r0
-    sub r2, r1 ; r2 holds the number of ms in the current blink period.
-               
-    mov r1, #tBlinkOff
-    cmp r2, r1 ; determine whether we are in the on or off part of blinkgin period    
-               
-    bhs BLINK_ON
-    bl ledBlueOff
-    b LOOP
-                
-BLINK_ON
-    bl ledBlueOn                
-    b LOOP
-END_ACTIVE
+    b LOOP ; continue in main loop
+    
+deactivateSystem
+    push {r0-r1,lr}
     ldr r0, =systemActive
     mov r1, #0
     str r1, [r0] ;mark the system as not active
@@ -181,8 +160,26 @@ END_ACTIVE
     bleq ledGreenOff ;turn off active indicator only if the user button is not pressed
     bl ledBlueOff ;
                 
-    b LOOP
+    pop {r0-r1, pc}
 				
+activateSystem
+    push {r0-r1, lr}
+    ldr r0, = systemActive
+    mov r1, #1
+    str r1, [r0] ; store systemActive as true
+    
+    bl GetTick
+    ldr r1, =systemStartTimestamp
+    str r0, [r1] ; store the current timestamp (start the timer)
+
+    ldr r0, =tZap
+    ldr r0, [r0]
+    mov r1, #1000
+    udiv r0, r0, r1
+    bl update7segment
+
+    pop {r0-r1, pc}
+    
 processButtonPress
     push {lr}
     bl ledGreenOn
@@ -193,13 +190,7 @@ processButtonRelease
     bl ledBlueOn
     bl ledGreenOn            
     
-    ldr r0, = systemActive
-    mov r1, #1
-    str r1, [r0] ; store systemActive as true
-    
-    bl GetTick
-    ldr r1, =systemStartTimestamp
-    str r0, [r1] ; store the current timestamp (start the timer)
+    bl activateSystem
             
     pop {r0, r1, pc}                
     
@@ -218,15 +209,65 @@ initSPI ;initialize SPI2 connected to the 7segment shift register
     pop {r0-r1}
     bx lr
     
-update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, decimal point ... msb)
-    push {r0-r3}
+clamp;(r0 value, r1 min, r2 max)
+    cmp r0, r2
+    
+    itt hi
+    movhi r0, r2
+    bxhi lr
+    
+    cmp r0, r1
+    it le
+    movle r0, r1
+    
+    bx lr
+
+drawNumber;(r0 ... positive number from interval <0, 10>)
+    push {r0-r3, lr}
+    mov r1, #0
+    mov r2, #10
+    bl clamp
+    
     mov r2, #4
     mul r0, r2
     ldr r2, =displayNumbers
-    ldr r2, [r2, r0]
+    ldr r0, [r2, r0]
+    bl update7segment
+    pop {r0-r3, pc}
+    
+
+update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, decimal point ... msb)
+    push {r1, lr}
     ldr r1, =SPI2_BASE
-    strh r2, [r1, #SPI_DR_o] ; store the new byte to be sent
-    pop {r0-r3}
-    bx lr
+    strh r0, [r1, #SPI_DR_o] ; store the new byte to be sent
+    pop {r1, pc}
+    
+applicationTick
+    push {r0-r3,lr}
+    ldr r0, =systemActive
+    ldr r0, [r0]
+    tst r0, r0
+    it eq
+    popeq {r0-r3,pc} ; if the system is not active, returns
+    
+    bl GetTick;
+    ldr r1, =systemStartTimestamp
+    ldr r1, [r1]
+    sub r0, r1 ; r0= elapsed ms
+    ldr r1, =tZap
+    ldr r1, [r1]
+    sub r0, r1, r0; r0 = ms remaining
+    
+    cmp r0, #0
+    bge UPDATE_7_SEGMENT
+    bl deactivateSystem
+    
+UPDATE_7_SEGMENT
+    
+    add r0, #500 ;nice delay so that the initial 5 is visible
+    mov r1, #1000
+    udiv r0, r0, r1
+    bl drawNumber    
+    pop {r0-r3, pc}
                 END	
                     

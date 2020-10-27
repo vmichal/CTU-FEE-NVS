@@ -17,7 +17,7 @@ SystemTicks SPACE 4
     export TimeElapsed
     EXPORT SysTick_Handler        
     EXPORT BlockingDelay
-
+        
 ;**************************************************************************************************
 ;* Jmeno funkce		: STK_CONFIG
 ;* Popis			: Konfigurace Systicku na interrupt kazdou milisekundu
@@ -63,6 +63,8 @@ SysTick_Handler								; Navesti zacatku podprogramu
     
     import userButtonSample
     bl userButtonSample
+    import applicationTick
+    bl applicationTick
     pop {pc}
     
 GetTick; returns the current time in ms
