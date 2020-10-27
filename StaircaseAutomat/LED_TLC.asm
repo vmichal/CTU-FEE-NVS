@@ -18,6 +18,7 @@ lastMinus SPACE 4
 systemStartTimestamp SPACE 4 ;timestamp when the blue LED was turned on.
 systemState SPACE 4 ;holds constant representing the current system state
 tZap SPACE 4; hold the currently configured length of active state
+tZapUnsaved SPACE 4; holds the new length of active state during configuration. It is not saved yet
 
 		AREA    STM32F1xx, CODE, READONLY  	; hlavicka souboru
 	
@@ -177,19 +178,17 @@ checkMinusButton
     ldr r0, =systemState
     ldr r1, [r0]
     cmp r1, #stateConfiguration
-    ittt ne ;change to configuration
-    movne r1, #stateConfiguration
-    strne r1, [r0]
-    popne {r0-r3, pc}; we are not in state configuration -> ignore this button press
+    it ne
+    blne enterConfig
 
-    ldr r0, =tZap
+    ldr r0, =tZapUnsaved
     ldr r1, [r0]
     sub r1, #1
     mov r0, r1
     mov r1, #1
     mov r2, #10
     bl clamp
-    ldr r1, = tZap
+    ldr r1, = tZapUnsaved
     str r0, [r1]
     
     pop {r0-r3, pc};
@@ -213,19 +212,17 @@ checkPlusButton
     ldr r0, =systemState
     ldr r1, [r0]
     cmp r1, #stateConfiguration
-    ittt ne ;change to configuration
-    movne r1, #stateConfiguration
-    strne r1, [r0]
-    popne {r0-r3, pc}; we are not in state configuration -> ignore this button press
+    it ne
+    blne enterConfig
 
-    ldr r0, =tZap
+    ldr r0, =tZapUnsaved
     ldr r1, [r0]
     add r1, #1
     mov r0, r1
     mov r1, #1
     mov r2, #10
     bl clamp
-    ldr r1, = tZap
+    ldr r1, = tZapUnsaved
     str r0, [r1]
     
     pop {r0-r3, pc};
@@ -252,6 +249,10 @@ checkOkButton
     
     mov r1, #stateIdle
     str r1, [r0] ; go to state idle
+    ldr r0, =tZap
+    ldr r1, =tZapUnsaved
+    ldr r1, [r1]
+    str r1, [r0]
     
     pop {r0-r3, pc};
         
@@ -319,8 +320,13 @@ enterConfig
     
     ldr r0, =tZap
     ldr r0, [r0]
+    ldr r1, =tZapUnsaved
+    str r0, [r1]
+    bl getNumberSegments
     bic r0, #segmentDP
     bl update7segment    
+    bl ledBlueOff
+    bl ledGreenOff
     pop {r1-r3, pc}
     
 processStartPress
@@ -414,7 +420,7 @@ HANDLE_CONFIG
     bl isDivisible
     mov r3, r0
     
-    ldr r0, =tZap
+    ldr r0, =tZapUnsaved
     ldr r0, [r0]
     bl getNumberSegments
     
