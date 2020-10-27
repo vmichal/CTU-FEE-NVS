@@ -77,6 +77,10 @@ BTNok EQU 1
 BTNplus EQU 2   
 BTNminus EQU 3
             
+start_o EQU 0            
+ok_o EQU 4
+plus_o EQU 8
+minus_o EQU 12
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 
 
@@ -145,29 +149,132 @@ MAIN									; MAIN navesti hlavni smycky programu
     bl initSPI
     mov r0, #tZAPdefault
     bl getNumberSegments
-    bic r0, #segmentDP
     bl update7segment
+    
+    
 LOOP ;main application loop
-    mov r0, #BTNstart
+    bl checkStartButton
+    bl checkPlusButton
+    bl checkMinusButton
+    bl checkOkButton
+    b LOOP ; continue in main loop
+
+checkMinusButton
+    push {r0-r3, lr}
+    mov r0, #BTNminus
     bl buttonPressedFiltered ; get current state into r0
-    ldr r1, = lastStart
-    ldr r2, [r1] ;load previous state into r2
+    ldr r1, = lastButtons
+    ldr r2, [r1, #minus_o] ;load previous state into r2
                 
     cmp r2, r0 ;if the current state is the same as the previous state 
+         
+    popeq {r0-r3, pc}; button state has not changed, skip button validation
+    str r0, [r1, #minus_o] ;store new valid state
                 
-    beq BUTTON_CHECK_DONE; button state has not changed, skip button validation
-    str r0, [r1] ;store new valid state
+    tst r0, r0 ;true (not zero) iff button is pressed
+    popne {r0-r3, pc}; we will wait for release
+
+    ldr r0, =systemState
+    ldr r1, [r0]
+    cmp r1, #stateConfiguration
+    ittt ne ;change to configuration
+    movne r1, #stateConfiguration
+    strne r1, [r0]
+    popne {r0-r3, pc}; we are not in state configuration -> ignore this button press
+
+    ldr r0, =tZap
+    ldr r1, [r0]
+    sub r1, #1
+    mov r0, r1
+    mov r1, #1
+    mov r2, #10
+    bl clamp
+    ldr r1, = tZap
+    str r0, [r1]
+    
+    pop {r0-r3, pc};
+
+
+checkPlusButton
+    push {r0-r3, lr}
+    mov r0, #BTNplus
+    bl buttonPressedFiltered ; get current state into r0
+    ldr r1, = lastButtons
+    ldr r2, [r1, #plus_o] ;load previous state into r2
+                
+    cmp r2, r0 ;if the current state is the same as the previous state 
+         
+    popeq {r0-r3, pc}; button state has not changed, skip button validation
+    str r0, [r1, #plus_o] ;store new valid state
+                
+    tst r0, r0 ;true (not zero) iff button is pressed
+    popne {r0-r3, pc}; we will wait for release
+
+    ldr r0, =systemState
+    ldr r1, [r0]
+    cmp r1, #stateConfiguration
+    ittt ne ;change to configuration
+    movne r1, #stateConfiguration
+    strne r1, [r0]
+    popne {r0-r3, pc}; we are not in state configuration -> ignore this button press
+
+    ldr r0, =tZap
+    ldr r1, [r0]
+    add r1, #1
+    mov r0, r1
+    mov r1, #1
+    mov r2, #10
+    bl clamp
+    ldr r1, = tZap
+    str r0, [r1]
+    
+    pop {r0-r3, pc};
+
+checkOkButton
+    push {r0-r3, lr}
+    mov r0, #BTNok
+    bl buttonPressedFiltered ; get current state into r0
+    ldr r1, = lastButtons
+    ldr r2, [r1, #ok_o] ;load previous state into r2
+                
+    cmp r2, r0 ;if the current state is the same as the previous state 
+         
+    popeq {r0-r3, pc}; button state has not changed, skip button validation
+    str r0, [r1, #ok_o] ;store new valid state
+                
+    tst r0, r0 ;true (not zero) iff button is pressed
+    popne {r0-r3, pc}; we will wait for release
+    
+    ldr r0, =systemState
+    ldr r1, [r0]
+    cmp r1, #stateConfiguration
+    popne {r0-r3, pc}; we are not in state configuration -> ignore this button press
+    
+    mov r1, #stateIdle
+    str r1, [r0] ; go to state idle
+    
+    pop {r0-r3, pc};
+        
+checkStartButton
+    push {r0-r3, lr}
+    mov r0, #BTNstart
+    bl buttonPressedFiltered ; get current state into r0
+    ldr r1, = lastButtons
+    ldr r2, [r1, #start_o] ;load previous state into r2
+                
+    cmp r2, r0 ;if the current state is the same as the previous state 
+         
+    popeq {r0-r3, pc}; button state has not changed, skip button validation
+    str r0, [r1, #start_o] ;store new valid state
                 
     tst r0, r0 ;true (not zero) iff button is pressed
                
-    bne BUTTON_PRESSED
-    bl processButtonRelease
-    b BUTTON_CHECK_DONE
-BUTTON_PRESSED                
-    bl processButtonPress
-BUTTON_CHECK_DONE
-
-    b LOOP ; continue in main loop
+    bne START_PRESSED
+    bl activateSystem
+    pop {r0-r3, pc};
+START_PRESSED                
+    bl processStartPress
+    pop {r0-r3, pc};
     
 deactivateSystem
     push {r0-r1,lr}
@@ -187,6 +294,7 @@ deactivateSystem
 				
 activateSystem
     push {r0-r1, lr}
+    bl ledBlueOn
     ldr r0, = systemState
     mov r1, #stateActive
     str r1, [r0] ; store systemActive as true
@@ -197,6 +305,7 @@ activateSystem
 
     ldr r0, =tZap
     ldr r0, [r0]
+    bl getNumberSegments
 
     bl update7segment
 
@@ -214,19 +323,10 @@ enterConfig
     bl update7segment    
     pop {r1-r3, pc}
     
-processButtonPress
+processStartPress
     push {lr}
     bl ledGreenOn
     pop {pc}
-    
-processButtonRelease
-    push {r0, r1, lr}
-    bl ledBlueOn
-    bl ledGreenOn            
-    
-    bl activateSystem
-            
-    pop {r0, r1, pc}                
     
     
 initSPI ;initialize SPI2 connected to the 7segment shift register
@@ -298,6 +398,7 @@ applicationTick
     cmp r0, #0
     bge UPDATE_7_SEGMENT
     bl deactivateSystem
+    pop {r0-r3, pc}
     
 HANDLE_CONFIG
     bl GetTick
@@ -306,8 +407,8 @@ HANDLE_CONFIG
     bl isDivisible
     tst r0, r0
     
-    it ne
-    popne {r0-r3, pc}
+    it eq
+    popeq {r0-r3, pc}
     mov r0, r3
     mov r1, #tConfigBlink*2
     bl isDivisible
@@ -321,7 +422,7 @@ HANDLE_CONFIG
     
     mov r1, #~segmentDP
     it eq
-    biceq r1, r0
+    andeq r1, r0
     mov r0, r1
     bl update7segment
     pop {r0-r3, pc}
@@ -342,10 +443,8 @@ HANDLE_IDLE
     bl isDivisible
     tst r0, r0
 
-
-
-    it ne
-    popne {r0-r3, pc}
+    it eq
+    popeq {r0-r3, pc}
     
     ldr r0, =tZap
     ldr r0, [r0]
@@ -385,8 +484,8 @@ isDivisible;(r0 what, r1 divider)
     bl modulo
     tst r0, r0
     ite eq
-    moveq r0, #0
-    movne r0, #1
+    moveq r0, #1
+    movne r0, #0
     pop {r1-r2, pc}    
 
     END	
