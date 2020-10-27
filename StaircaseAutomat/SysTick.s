@@ -61,8 +61,8 @@ SysTick_Handler								; Navesti zacatku podprogramu
     add r1, #1    
     str r1, [r0]
     
-    import userButtonSample
-    bl userButtonSample
+    import buttonSample
+    bl buttonSample
     import applicationTick
     bl applicationTick
     pop {pc}

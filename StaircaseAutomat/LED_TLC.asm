@@ -9,10 +9,12 @@
 		AREA mojedata, DATA, NOINIT, READWRITE
             
 ; previous known state of the user button. If it differs from filtered value, it implies that an edge occured
+lastButtons
 lastStart SPACE 4 
 lastOK SPACE 4
 lastPlus SPACE 4
 lastMinus SPACE 4
+    
 systemStartTimestamp SPACE 4 ;timestamp when the blue LED was turned on.
 systemState SPACE 4 ;holds constant representing the current system state
 tZap SPACE 4; hold the currently configured length of active state
@@ -24,7 +26,7 @@ tZap SPACE 4; hold the currently configured length of active state
         GET		CorePeripherals.s	
         
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
-tZAPdefault  EQU 5 ; 5 seconds turned on
+tZAPdefault  EQU 4 ; 4 seconds turned on
 tIdleBlink EQU 1000;
 tConfigBlink EQU 400;
     
@@ -70,7 +72,11 @@ displayNumbers
     DCD ~number9
     DCD ~number10
         
-        
+BTNstart EQU 0
+BTNok EQU 1    
+BTNplus EQU 2   
+BTNminus EQU 3
+            
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 
 
@@ -84,13 +90,12 @@ displayNumbers
         IMPORT GPIO_CNF
         IMPORT RCC_CNF
         import GetTick
-        import userButtonPressedFiltered
-                    import userButtonSample
+        import buttonPressedFiltered
     import ledBlueOn        
     import ledBlueOff
     import ledGreenOn
     import ledGreenOff            
-            
+      
             
 		;SystemTicks ; Stores the number of ms since boot (for now lives in the beggining of RAM)
 __use_two_region_memory	
@@ -109,14 +114,11 @@ __main
 MAIN									; MAIN navesti hlavni smycky programu
     ;clears variables in data
     mov r1, #0
-    ldr r0, =lastStart 
+    ldr r0, =lastButtons
     str r1, [r0]; initialize lastStart to false
-    ldr r0, =lastOK
-    str r1, [r0]; initialize lastOK to false
-    ldr r0, =lastPlus
-    str r1, [r0]; initialize lastPlus to false
-    ldr r0, =lastMinus
-    str r1, [r0]; initialize lastMinus to false
+    str r1, [r0, #4]; initialize lastOK to false
+    str r1, [r0, #8]; initialize lastPlus to false
+    str r1, [r0, #12]; initialize lastMinus to false
 
     ldr r0, =systemStartTimestamp
     str r1, [r0]
@@ -145,8 +147,9 @@ MAIN									; MAIN navesti hlavni smycky programu
     bl getNumberSegments
     bic r0, #segmentDP
     bl update7segment
-LOOP ;main application loop                
-    bl userButtonPressedFiltered ; get current state into r0
+LOOP ;main application loop
+    mov r0, #BTNstart
+    bl buttonPressedFiltered ; get current state into r0
     ldr r1, = lastStart
     ldr r2, [r1] ;load previous state into r2
                 
@@ -171,7 +174,8 @@ deactivateSystem
     ldr r0, =systemState
     mov r1, #stateIdle
     str r1, [r0] ;mark the system as not active
-    bl userButtonPressedFiltered;
+    mov r0, #BTNstart
+    bl buttonPressedFiltered;
     tst r0,r0
     it eq
     bleq ledGreenOff ;turn off active indicator only if the user button is not pressed

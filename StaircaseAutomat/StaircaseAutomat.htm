@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\StaircaseAutomat.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\StaircaseAutomat.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 27 03:38:32 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Tue Oct 27 04:29:33 2020
 <BR><P>
 <H3>Maximum Stack Usage =          0 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -22,8 +22,8 @@ Functions with no stack information
  <LI><a href="#[45]">TimeElapsed</a>
  <LI><a href="#[46]">BlockingDelay</a>
  <LI><a href="#[3d]">GPIO_CNF</a>
- <LI><a href="#[3e]">userButtonPressedFiltered</a>
- <LI><a href="#[44]">userButtonSample</a>
+ <LI><a href="#[3e]">buttonPressedFiltered</a>
+ <LI><a href="#[44]">buttonSample</a>
  <LI><a href="#[43]">ledBlueOn</a>
  <LI><a href="#[42]">ledGreenOn</a>
  <LI><a href="#[40]">ledBlueOff</a>
@@ -301,11 +301,11 @@ Global Symbols
 <P><STRONG><a name="[3a]"></a>__user_initial_stackheap</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, stm32f10x.o(.text), UNUSED, KEPT)
 
 <P><STRONG><a name="[37]"></a>__main</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, led_tlc.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonPressedFiltered
-<LI><a href="#[42]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledGreenOn
+<BR><BR>[Calls]<UL><LI><a href="#[42]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledGreenOn
 <LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledGreenOff
 <LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledBlueOn
 <LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ledBlueOff
+<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;buttonPressedFiltered
 <LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;STK_CONFIG
 <LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RCC_CNF
 <LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
@@ -325,14 +325,14 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
-<BR><BR>[Calls]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
+<BR><BR>[Calls]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;buttonSample
 <LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;applicationTick
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> stm32f10x.o(RESET)
 </UL>
 <P><STRONG><a name="[41]"></a>GetTick</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
 <BR><BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
-<LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
+<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;buttonPressedFiltered
 <LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
 <LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;applicationTick
 <LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
@@ -341,7 +341,7 @@ Global Symbols
 <P><STRONG><a name="[45]"></a>TimeElapsed</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, systick.o(STM32F10x_INI))
 <BR><BR>[Calls]<UL><LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;userButtonSample
+<BR>[Called By]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;buttonPressedFiltered
 <LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BlockingDelay
 </UL>
 
@@ -354,15 +354,15 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 </UL>
 
-<P><STRONG><a name="[3e]"></a>userButtonPressedFiltered</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
-<BR><BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
-</UL>
-
-<P><STRONG><a name="[44]"></a>userButtonSample</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<P><STRONG><a name="[3e]"></a>buttonPressedFiltered</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
 <BR><BR>[Calls]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TimeElapsed
 <LI><a href="#[41]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTick_Handler
+<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
+</UL>
+
+<P><STRONG><a name="[44]"></a>buttonSample</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))
+<BR><BR>[Called By]<UL><LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTick_Handler
 </UL>
 
 <P><STRONG><a name="[43]"></a>ledBlueOn</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, gpio.o(STM32F10x_INI))

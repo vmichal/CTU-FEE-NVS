@@ -19,10 +19,11 @@
 ;***************************************************************************************************
 				
         AREA MYDATA, DATA, NOINIT, READWRITE
-
-userButtonPressedStart SPACE 4
-userButtonPressedCache SPACE 4
-userButtonLastValidState SPACE 4
+            
+ButtonData
+startPressedStart SPACE 4
+startPressedCache SPACE 4
+startLastValidState SPACE 4
     
     
 OkPressedStart SPACE 4
@@ -37,14 +38,18 @@ PlusLastValidState SPACE 4
 MinusPressedStart SPACE 4
 MinusPressedCache SPACE 4
 MinusLastValidState SPACE 4
-                
+                             
 		AREA    GPIO_Driver, CODE, READONLY  	; hlavicka souboru
 	
 		GET		INI.s					; vlozeni souboru s pojmenovanymi adresami
 										; jsou zde definovany adresy pristupu do pameti (k registrum)
 
-userButtonPort EQU GPIOA_BASE ;User button is connected to PA0
-userButtonPin EQU 0
+PressedStart_o EQU 0
+PressedCache_o EQU 4 
+LastValidState_o EQU 8
+
+startPort EQU GPIOA_BASE ;User button is connected to PA0
+startPin EQU 0
 
 PlusPort EQU GPIOB_BASE
 PlusPin EQU 8   
@@ -63,14 +68,30 @@ spiDataPin EQU 15
     
 debounceDelay EQU 80 ; in ms
 
+BTNstart EQU 0
+BTNok EQU 1    
+BTNplus EQU 2   
+BTNminus EQU 3
+    
+ButtonPorts
+    DCD startPort
+    DCD OkPort
+    DCD PlusPort
+    DCD MinusPort
+        
+ButtonPins
+    DCD startPin
+    DCD OkPin
+    DCD PlusPin
+    DCD MinusPin
+
     EXPORT GPIO_CNF      
-    EXPORT userButtonPressedFiltered
-    EXPORT userButtonSample
+    EXPORT buttonPressedFiltered
+    EXPORT buttonSample
     EXPORT ledBlueOn        
     EXPORT ledBlueOff
     EXPORT ledGreenOn
     EXPORT ledGreenOff
-        
     import GetTick
     import TimeElapsed
 
@@ -136,8 +157,8 @@ GPIO_CNF								; Navesti zacatku podprogramu
                 str r1, [r0, #GPIO_ODR_o]
                 
                 ;initialize variables
-                ldr r0, = userButtonPressedStart
-                ldr r1, = MinusLastValidState
+                ldr r0, = ButtonData
+                add r1, r0, #4*4*3
                 mov r2, #0
                 
 LOOP
@@ -149,64 +170,81 @@ LOOP
                 
 
 ;**************************************************************************************************
-;* Jmeno funkce		: userButtonPressedRaw
+;* Jmeno funkce		: startPressedRaw
 ;* Popis			: 
-;* Vstup			: Zadny
+;* Vstup			: r0 .. constant denoting a single button
 ;* Vystup			: r0 .. 1 iff button is currently presseed
 ;**************************************************************************************************
-userButtonPressedRaw								; Navesti zacatku podprogramu             
-    ldr r0, =userButtonPort
-    add r0, #GPIO_IDR_o ; r0 == &port::IDR
-    ldr r0, [r0]
-    tst r0, #1 :SHL: userButtonPin
+
+buttonPressedRaw								; Navesti zacatku podprogramu             
+    push {r1-r4, lr}
+    mov r4, r0
+    mov r1, #4
+    mul r1, r0
+    ldr r2, =ButtonPorts
+    ldr r3, =ButtonPins
     
-    ite eq
-    moveq r0, #0 
-    movne r0, #1 ; bit is set
+    ldr r2, [r2, r1] ;buttons port
+    ldr r3, [r3, r1] ; buttons pin
+    ldr r0, [r2, #GPIO_IDR_o]
+    lsr r0, r3
     
-    bx lr
+    mov r1, #~1
+    bic r0, r1
+    
+    cmp r4, #BTNstart
+    eorne r0, #1
+    
+    pop {r1-r4, pc}
     
 ;**************************************************************************************************
-;* Jmeno funkce		: userButtonPressed
+;* Jmeno funkce		: startPressed
 ;* Popis			: 
-;* Vstup			: Zadny
+;* Vstup			: r0 .. constant denoting a single button
 ;* Vystup			: r0 .. 1 iff button is presseed (filtered from many previous measurements)
 ;**************************************************************************************************
-userButtonPressedFiltered								; Navesti zacatku podprogramu    
-    ldr r0, =userButtonLastValidState
-    ldr r0, [r0]
-    bx lr
+buttonPressedFiltered								; Navesti zacatku podprogramu    
+    push {r1, lr}
+    mov r1, #4*3
+    mul r0, r1
+    add r0, #2*4
+
+    ldr r1, =ButtonData
+    ldr r0, [r1, r0]
+
+    pop {r1, pc}
     
 ;**************************************************************************************************
-;* Jmeno funkce		: userButtonSample
+;* Jmeno funkce		: startSample
 ;* Popis			: 
-;* Vstup			: Zadny
+;* Vstup			: r0 .. constant denoting a single button
 ;* Vystup			: r0 .. 1 iff button is pressed
 ;**************************************************************************************************
-userButtonSample								
-    push {r0,r1,r2 ,r3, lr}
-    bl userButtonPressedRaw
+sampleOne
+    push {r0-r7, lr}
+    mov r1, #4*3
+    mul r7, r0, r1 
+    ldr r1, =ButtonData
+    add r7, r1 ;r7 points to button data
+    
+    bl buttonPressedRaw
     mov r3, r0; r3 == 1 if the button is pressed right now
     
     bl GetTick
 
-    ldr r1, =userButtonPressedCache
-    ldr r1, [r1] ; r1 == 1 for pressed or 0 for not pressed
+    ldr r1, [r7, #PressedCache_o] ; r1 == 1 for pressed or 0 for not pressed
     
     cmp r1, r3
     
     beq SAME
 DIFFERENT ;if the current state differs from the previous, store the new state
-    ldr r2, =userButtonPressedStart
-    str r0, [r2] ;store the current time as the start time for press
-    ldr r1, =userButtonPressedCache
-    str r3, [r1] ;stores one if the button is currently pressed
+    str r0, [r7, #PressedStart_o] ;store the current time as the start time for press
+    str r3, [r7, #PressedCache_o] ;stores one if the button is currently pressed
     
-    pop {r0,r1,r2 ,r3, pc}
+    pop {r0-r7, pc}
 
 SAME ; if the state has been stable for long enough, save it
-    ldr r1, =userButtonPressedStart
-    ldr r1, [r1]
+    ldr r1, [r7, #PressedStart_o]
     ; r1 == time when the last transition occured
     ; r2 == 1 iff the button is currently pressed
     mov r0, #debounceDelay ;debounce delay in ms
@@ -215,18 +253,24 @@ SAME ; if the state has been stable for long enough, save it
     tst r0, r0
     ; if r0 != 0 then the button has been stable for a while. Otherwise return the other option
     
-    popeq {r0,r1,r2 ,r3, pc}; return iff the button has not been stable
+    popeq {r0-r7, pc}; return iff the button has not been stable
 
-    ldr r0, = userButtonPressedCache
-    ldr r0, [r0]
-    ldr r1, = userButtonLastValidState
+    ldr r0, [r7, #PressedCache_o]
+    str r0, [r7, #LastValidState_o]
     
-    str r0, [r1]
-    
-    pop {r0,r1,r2 ,r3, pc}; return
+    pop {r0-r7, pc}; return
 
-
+buttonSample
+    push {r0, lr}
+    mov r0, #BTNstart
+NEXT_BUTTON
+    bl sampleOne
     
+    add r0, #1
+    cmp r0, #BTNminus+1
+    bne NEXT_BUTTON
+    
+    pop {r0, pc}
     
 ;**************************************************************************************************
 ;* Jmeno funkce		: led(Blue|Green)(On|Off)
