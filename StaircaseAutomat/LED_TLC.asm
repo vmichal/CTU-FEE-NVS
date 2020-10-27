@@ -29,7 +29,7 @@ tZapUnsaved SPACE 4; holds the new length of active state during configuration. 
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 tZAPdefault  EQU 4 ; 4 seconds turned on
 tIdleBlink EQU 1000;
-tConfigBlink EQU 400;
+tConfigBlink EQU 400; half period of blinking in config state
     
 ;state machine constants
 stateActive EQU 0; lights are on
