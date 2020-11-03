@@ -36,6 +36,8 @@ stateActive EQU 0; lights are on
 stateConfiguration EQU 1; service buttons are being used
 stateIdle EQU 2; we are waiting for user input
 
+tZapMax EQU 99 ;in seconds
+tZapMin EQU 1; in seconds
 
 segmentA EQU 1 << 7
 segmentB EQU 1 << 6
@@ -71,7 +73,6 @@ displayNumbers
     DCD ~number7
     DCD ~number8
     DCD ~number9
-    DCD ~number10
         
 BTNstart EQU 0
 BTNok EQU 1    
@@ -99,9 +100,10 @@ minus_o EQU 12
     import ledBlueOn        
     import ledBlueOff
     import ledGreenOn
-    import ledGreenOff            
-      
-            
+    import ledGreenOff     
+    import rightOn
+    import leftOn
+        
 		;SystemTicks ; Stores the number of ms since boot (for now lives in the beggining of RAM)
 __use_two_region_memory	
 __main								  						
@@ -148,10 +150,6 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
     bl initSPI
-    mov r0, #tZAPdefault
-    bl getNumberSegments
-    bl update7segment
-    
     
 LOOP ;main application loop
     bl checkStartButton
@@ -185,8 +183,8 @@ checkMinusButton
     ldr r1, [r0]
     sub r1, #1
     mov r0, r1
-    mov r1, #1
-    mov r2, #10
+    mov r1, #tZapMin
+    mov r2, #tZapMax
     bl clamp
     ldr r1, = tZapUnsaved
     str r0, [r1]
@@ -219,8 +217,8 @@ checkPlusButton
     ldr r1, [r0]
     add r1, #1
     mov r0, r1
-    mov r1, #1
-    mov r2, #10
+    mov r1, #tZapMin
+    mov r2, #tZapMax
     bl clamp
     ldr r1, = tZapUnsaved
     str r0, [r1]
@@ -288,7 +286,7 @@ deactivateSystem
     it eq
     bleq ledGreenOff ;turn off active indicator only if the user button is not pressed
     bl ledBlueOff ;
-    mov r0, #~0
+    mvn r0, #0
     bl update7segment
                 
     pop {r0-r1, pc}
@@ -322,9 +320,8 @@ enterConfig
     ldr r0, [r0]
     ldr r1, =tZapUnsaved
     str r0, [r1]
-    bl getNumberSegments
-    bic r0, #segmentDP
-    bl update7segment    
+    mvn r0, #0
+    bl update7segment ;turn the display "off"
     bl ledBlueOff
     bl ledGreenOff
     pop {r1-r3, pc}
@@ -344,7 +341,7 @@ initSPI ;initialize SPI2 connected to the 7segment shift register
     ; use only one direction of data transfer (from MISO to the shift register)
     ldr r1, = (1 :SHL:2) :OR: (1 :SHL: 6) :OR: (1 :SHL: 7) :OR: (3 :SHL: 14)
     str r1, [r0, #SPI_CR1_o]
-    mov r1, #0xff
+    mvn r1, #0
     str r1, [r0, #SPI_DR_o]
     pop {r0-r1}
     bx lr
@@ -364,7 +361,7 @@ clamp;(r0 value, r1 min, r2 max)
     
 getNumberSegments;(r0 .. positive number from interval <0, 10>)
     push {r1-r3, lr}
-    mov r1, #10+1
+    mov r1, #10
     bl modulo
     
     mov r2, #4
@@ -378,9 +375,25 @@ update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, deci
     ldr r1, =SPI2_BASE
     strh r0, [r1, #SPI_DR_o] ; store the new byte to be sent
     pop {r1, pc}
+
+shallLeftBeOn ; returns true in r0 iff the left display shall be on
+    push {lr}
+    bl GetTick
+    bic r0, #~1 ;clear everything except for lsb
+    pop {pc}
     
 applicationTick
     push {r0-r3,lr}
+    
+    bl shallLeftBeOn
+    tst r0, r0
+    bne LEFT_ON
+    bl rightOn
+    b DISPLAY_DONE
+LEFT_ON
+    bl leftOn        
+DISPLAY_DONE
+
     ldr r0, =systemState
     ldr r0, [r0] ;r0 = current state
     
@@ -402,78 +415,92 @@ applicationTick
     sub r0, r1, r0; r0 = ms remaining
     
     cmp r0, #0
-    bge UPDATE_7_SEGMENT
+    bge HANDLE_ACTIVE
     bl deactivateSystem
     pop {r0-r3, pc}
     
 HANDLE_CONFIG
-    bl GetTick
-    mov r1, #tConfigBlink
-    mov r3, r0
-    bl isDivisible
-    tst r0, r0
-    
-    it eq
-    popeq {r0-r3, pc}
-    mov r0, r3
-    mov r1, #tConfigBlink*2
-    bl isDivisible
-    mov r3, r0
-    
+
     ldr r0, =tZapUnsaved
-    ldr r0, [r0]
+    ldr r7, [r0]
+    mvn r6, #0 ;register with decimal point
+    bl shallLeftBeOn
+    tst r0, r0
+    itte ne
+    movne r1, #10
+    udivne r7, r7, r1
+    biceq r6, #segmentDP
+    mov r0, r7
     bl getNumberSegments
+    mov r7, r0
+    bl GetTick
+    mov r1, #tConfigBlink*2
+    bl modulo
+    cmp r0, #tConfigBlink
+    mov r0, r7
+    mvnge r0, #0
     
-    tst r3, r3
-    
-    mov r1, #~segmentDP
-    it eq
-    andeq r1, r0
-    mov r0, r1
+    and r0, r6
     bl update7segment
     pop {r0-r3, pc}
     
     
 SHALL_DRAW    
     ldr r0, =tZap
-    ldr r0, [r0]
+    ldr r2, [r0]
+    bl shallLeftBeOn
+    tst r0, r0
+    itt ne
+    movne r1, #tZapMax
+    udivne r2, r2, r1
+    mov r0, r2
     bl getNumberSegments
     bl update7segment
     pop {r0-r3, pc}
     
-    
 HANDLE_IDLE
-    bl GetTick
-    mov r1, #tIdleBlink
-    mov r3, r0
-    bl isDivisible
-    tst r0, r0
-
-    it eq
-    popeq {r0-r3, pc}
-    
     ldr r0, =tZap
-    ldr r0, [r0]
+    ldr r7, [r0]
+
+    bl shallLeftBeOn
+    mov r6, r0
+    tst r0, r0
+    itt ne
+    movne r1, #10
+    udivne r7, r7, r1    
+    mov r0, r7
     bl getNumberSegments
     mov r7, r0
 
-    mov r0, r3
+    bl GetTick
     mov r1, #tIdleBlink*2
-    bl isDivisible
-    tst r0, r0
+    bl modulo
+    cmp r0, #tIdleBlink
+    ite ge
+    movge r0, #1
+    movlt r0, #0
+    mvn r6, r6
+    tst r0, r6
     
     mov r0, r7
-    it eq
-    biceq r0, #segmentDP  
+    it ne
+    bicne r0, #segmentDP  
     bl update7segment
     pop {r0-r3, pc}
     
     
-UPDATE_7_SEGMENT
+HANDLE_ACTIVE
     
     add r0, #500 ;nice delay so that the initial 5 is visible
     mov r1, #1000
-    udiv r0, r0, r1
+    udiv r7, r0, r1
+    bl shallLeftBeOn
+    tst r0, r0
+    itt ne
+    movne r1, #10
+    udivne r7, r7, r1    
+    mov r0, r7
+    
     bl getNumberSegments
     bl update7segment
     pop {r0-r3, pc}

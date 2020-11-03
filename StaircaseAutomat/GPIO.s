@@ -57,6 +57,11 @@ MinusPort EQU GPIOC_BASE
 MinusPin EQU 7
 OkPort EQU GPIOA_BASE
 OkPin EQU 11
+    
+leftPort EQU GPIOB_BASE
+rightPort EQU GPIOB_BASE
+leftPin EQU 8
+rightPin EQU 9
 
 ledBluePort EQU GPIOC_BASE
 ledGreenPort EQU GPIOC_BASE
@@ -94,7 +99,9 @@ ButtonPins
     EXPORT ledGreenOff
     import GetTick
     import TimeElapsed
-
+    export leftOn
+    export rightOn
+        
 ;**************************************************************************************************
 ;* Jmeno funkce		: GPIO_CNF
 ;* Popis			: Konfigurace brany A a C
@@ -156,6 +163,18 @@ GPIO_CNF								; Navesti zacatku podprogramu
                 orr r1, #(1 :SHL: PlusPin) :OR: (1 :SHL: MinusPin)
                 str r1, [r0, #GPIO_ODR_o]
                 
+                ;configure PB8, PB9 as output push-pull
+                ldr r0, =GPIOB_BASE
+                ldr r1, [r0, #GPIO_CRH_o]
+                ldr r2, = 0xf << ((leftPin-8)*4) :OR: 0xf << ((rightPin-8)*4)
+                bic r1, r2
+                ldr r2, = 0x2 << ((leftPin-8)*4) :OR: 0x2 << ((rightPin-8)*4)
+                orr r1, r2
+                str r1, [r0, #GPIO_CRH_o]
+                ldr r1, [r0, #GPIO_ODR_o] ;clear pins (turn display on)
+                orr r1, #(1 :SHL: rightPin) :OR: (1 :SHL: leftPin)
+                str r1, [r0, #GPIO_ODR_o]                
+                
                 ;initialize variables
                 ldr r0, = ButtonData
                 add r1, r0, #4*4*3
@@ -168,6 +187,26 @@ LOOP
                 
                 pop {pc}
                 
+
+leftOn
+    push {r0-r2, lr}
+    ldr r0, =GPIOB_BASE
+    ldr r1, [r0, #GPIO_ODR_o]
+    orr r1, #(1 :SHL: leftPin)
+    bic r1, #(1:SHL: rightPin)
+    str r1, [r0, #GPIO_ODR_o]
+
+    pop {r0-r2, pc}
+    
+rightOn
+    push {r0-r2, lr}
+    ldr r0, =GPIOB_BASE
+    ldr r1, [r0, #GPIO_ODR_o]
+    orr r1, #(1 :SHL: rightPin)
+    bic r1, #(1 :SHL: leftPin)
+    str r1, [r0, #GPIO_ODR_o]
+
+    pop {r0-r2, pc}
 
 ;**************************************************************************************************
 ;* Jmeno funkce		: startPressedRaw

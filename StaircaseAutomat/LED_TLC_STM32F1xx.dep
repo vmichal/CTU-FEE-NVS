@@ -1,12 +1,12 @@
 Dependencies for Project 'LED_TLC', Target 'STM32F1xx': (DO NOT MODIFY !)
 F (.\STM32F10x.s)(0x4BB1D714)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\stm32f10x.lst --xref -o .\stm32f10x.o --depend .\stm32f10x.d)
-F (.\LED_TLC.asm)(0x5F982C76)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\led_tlc.lst --xref -o .\led_tlc.o --depend .\led_tlc.d)
+F (.\LED_TLC.asm)(0x5FA14BE9)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\led_tlc.lst --xref -o .\led_tlc.o --depend .\led_tlc.d)
 I (INI.s)(0x5F8F0E0C)
 I (CorePeripherals.s)(0x5F7C2B1C)
 F (.\CorePeripherals.s)(0x5F7C2B1C)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\coreperipherals.lst --xref -o .\coreperipherals.o --depend .\coreperipherals.d)
 F (.\SysTick.s)(0x5F97894F)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\systick.lst --xref -o .\systick.o --depend .\systick.d)
 I (CorePeripherals.s)(0x5F7C2B1C)
-F (.\GPIO.s)(0x5FA12A52)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\gpio.lst --xref -o .\gpio.o --depend .\gpio.d)
+F (.\GPIO.s)(0x5FA14408)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\gpio.lst --xref -o .\gpio.o --depend .\gpio.d)
 I (INI.s)(0x5F8F0E0C)
 F (.\RCC.s)(0x5F976515)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\rcc.lst --xref -o .\rcc.o --depend .\rcc.d)
 I (INI.s)(0x5F8F0E0C)
