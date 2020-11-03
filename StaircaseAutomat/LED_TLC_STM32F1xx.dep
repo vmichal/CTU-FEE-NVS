@@ -6,7 +6,7 @@ I (CorePeripherals.s)(0x5F7C2B1C)
 F (.\CorePeripherals.s)(0x5F7C2B1C)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\coreperipherals.lst --xref -o .\coreperipherals.o --depend .\coreperipherals.d)
 F (.\SysTick.s)(0x5F97894F)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\systick.lst --xref -o .\systick.o --depend .\systick.d)
 I (CorePeripherals.s)(0x5F7C2B1C)
-F (.\GPIO.s)(0x5F979417)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\gpio.lst --xref -o .\gpio.o --depend .\gpio.d)
+F (.\GPIO.s)(0x5FA12A52)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\gpio.lst --xref -o .\gpio.o --depend .\gpio.d)
 I (INI.s)(0x5F8F0E0C)
 F (.\RCC.s)(0x5F976515)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\ST\STM32F10x--list .\rcc.lst --xref -o .\rcc.o --depend .\rcc.d)
 I (INI.s)(0x5F8F0E0C)

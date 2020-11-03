@@ -51,10 +51,10 @@ LastValidState_o EQU 8
 startPort EQU GPIOA_BASE ;User button is connected to PA0
 startPin EQU 0
 
-PlusPort EQU GPIOB_BASE
-PlusPin EQU 8   
-MinusPort EQU GPIOB_BASE
-MinusPin EQU 9
+PlusPort EQU GPIOC_BASE
+PlusPin EQU 6   
+MinusPort EQU GPIOC_BASE
+MinusPin EQU 7
 OkPort EQU GPIOA_BASE
 OkPin EQU 11
 
@@ -144,14 +144,14 @@ GPIO_CNF								; Navesti zacatku podprogramu
                 orr r1, #1 :SHL: OkPin
                 str r1, [r0, #GPIO_ODR_o]
                 
-                ;configure PB8 and PB9 as input pullup/pulldown
-                ldr r0, =GPIOB_BASE
-                ldr r1, [r0, #GPIO_CRH_o]
-                ldr r2, = 0xf << ((MinusPin - 8)*4) :OR: 0xf << ((PlusPin - 8)*4)
+                ;configure PC7 and PC6 as input pullup/pulldown
+                ldr r0, =GPIOC_BASE
+                ldr r1, [r0, #GPIO_CRL_o]
+                ldr r2, = 0xf << (MinusPin*4) :OR: 0xf << (PlusPin*4)
                 bic r1, r2
-                ldr r2, = 0x8 << ((MinusPin - 8)*4) :OR: 0x8 << ((PlusPin - 8)*4)
+                ldr r2, = 0x8 << (MinusPin*4) :OR: 0x8 << (PlusPin*4)
                 orr r1, r2
-                str r1, [r0, #GPIO_CRH_o]
+                str r1, [r0, #GPIO_CRL_o]
                 ldr r1, [r0, #GPIO_ODR_o]
                 orr r1, #(1 :SHL: PlusPin) :OR: (1 :SHL: MinusPin)
                 str r1, [r0, #GPIO_ODR_o]
