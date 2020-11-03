@@ -29,7 +29,28 @@ SPI_CR1_o EQU 0x0
 SPI_CR2_o EQU 0x4
 SPI_SR_o EQU 0x8
 SPI_DR_o EQU 0xc
+    
+USART1_BASE EQU 0x40013800
 
+USART_SR_o EQU 0x0
+USART_DR_o EQU 0x4
+USART_BRR_o EQU 0x8
+USART_CR1_o EQU 0xc
+USART_CR2_o EQU 0x10
+USART_CR3_o EQU 0x14
+USART_GTPR_o EQU 0x18
+
+USART_SR_RXNE EQU 1 :SHL: 5
+    
+DMA1_BASE EQU 0x40020000
+    
+DMA_ISR_o EQU 0x0
+DMA_IFCR_o EQU 0x4
+    
+DMA_CCR4_o EQU 0x44
+DMA_CNDTR4_o EQU 0x48
+DMA_CPAR4_o EQU 0x4c
+DMA_CMAR4_o EQU 0x50
 
 ;********************************************************************************
 ;*   				GPIOA				 	  	*

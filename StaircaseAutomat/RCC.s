@@ -94,6 +94,16 @@ NO_PLL_RDY		LDR		R1, [R0]		; Nacteni stavu registru RCC_CR do R1
                 ldr r1, [r0]
                 orr r1, #1:SHL:14; SPI2 clock enable
                 str r1, [r0]
+                
+                ldr r0, =RCC_APB2ENR
+                ldr r1, [r0]
+                orr r1, #1:SHL:14 ;USART1 clock enable
+                str r1, [r0]
+                
+                ldr r0, =RCC_AHBENR
+                ldr r1, [r0]
+                orr r1, #1:SHL:0;DMA1 clock enable
+                str r1, [r0]
 
 				BX		LR				; Navrat z podprogramu, skok na adresu v LR
  

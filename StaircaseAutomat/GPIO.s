@@ -71,6 +71,10 @@ ledGreenPin EQU 9
 spiClockPin EQU 13
 spiDataPin EQU 15
     
+uartPort EQU GPIOA_BASE
+uartTxPin EQU 9
+uartRxPin EQU 10    
+    
 debounceDelay EQU 80 ; in ms
 
 BTNstart EQU 0
@@ -151,7 +155,7 @@ GPIO_CNF								; Navesti zacatku podprogramu
                 orr r1, #1 :SHL: OkPin
                 str r1, [r0, #GPIO_ODR_o]
                 
-                ;configure PC7 and PC6 as input pullup/pulldown
+                ;configure PC7 and PC6 as input pullup
                 ldr r0, =GPIOC_BASE
                 ldr r1, [r0, #GPIO_CRL_o]
                 ldr r2, = 0xf << (MinusPin*4) :OR: 0xf << (PlusPin*4)
@@ -174,6 +178,18 @@ GPIO_CNF								; Navesti zacatku podprogramu
                 ldr r1, [r0, #GPIO_ODR_o] ;clear pins (turn display on)
                 orr r1, #(1 :SHL: rightPin) :OR: (1 :SHL: leftPin)
                 str r1, [r0, #GPIO_ODR_o]                
+                
+                ;configure PA9, PA10 for uaart. tx .. AF push-pull, rx .. input pullup
+                ldr r0, = uartPort
+                ldr r1, [r0, #GPIO_CRH_o]
+                ldr r2, = 0xf << ((uartTxPin-8)*4) :OR: 0xf << ((uartRxPin-8)*4)
+                bic r1, r2
+                ldr r2, = 0x9 << ((uartTxPin-8)*4) :OR: 0x8 << ((uartRxPin-8)*4)
+                orr r1, r2            
+                str r1, [r0, #GPIO_CRH_o]
+                ldr r1, [r0, #GPIO_ODR_o]
+                orr r1, #(1 :SHL: uartRxPin) ;activate pull up on rx pin
+                str r1, [r0, #GPIO_ODR_o]
                 
                 ;initialize variables
                 ldr r0, = ButtonData
