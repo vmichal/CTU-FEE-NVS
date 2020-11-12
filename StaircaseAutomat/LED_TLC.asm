@@ -7,8 +7,12 @@
 ;* AUTOR			: Vojtech Michal based on Michal TOMÁŠ's work
 ;***************************************************************************************************
     AREA strings, CODE, READONLY
+
+;Constants controling string placement in memory.
+;A single line is repeatedly sent via UART to connected PC. This line in held in memory location terminalString.
+;This memory location is regularly updated by interrupt code and continuously streamed over UART using the DMA.
 stringHeader
-    DCB "\rVomi's automat: "
+    DCB "\rVoMi's automat: "
 stringHeaderEnd
 
 stringOn
@@ -77,7 +81,7 @@ USART_baudrate EQU 9600
 tZapMax EQU 99 ;in seconds
 tZapMin EQU 1; in seconds
 
-
+;symbolic constants for LED segments. Respects shift register's layout
 segmentA EQU 1 << 7
 segmentB EQU 1 << 6
 segmentC EQU 1 << 5
@@ -87,7 +91,7 @@ segmentF EQU 1 << 2
 segmentG EQU 1 << 1
 segmentDP EQU 1 << 0
 
-
+;definition of symbolic constants for each number
 segmentsThreeLines EQU segmentA :OR: segmentG :OR: segmentD;
 number0 EQU segmentA :OR: segmentB :OR: segmentC :OR: segmentD :OR: segmentE :OR: segmentF ;0
 number1 EQU segmentB :OR: segmentC ;1
@@ -101,6 +105,8 @@ number8 EQU number0 :OR: segmentG;8
 number9 EQU number4 :OR: segmentA :OR: segmentD;
 number10 EQU number0;10
     ALIGN 4
+        
+;placement of constants into flash memory
 displayNumbers
 
     DCD ~number0
@@ -114,6 +120,9 @@ displayNumbers
     DCD ~number8
     DCD ~number9
         
+
+
+        
 BTNstart EQU 0
 BTNok EQU 1    
 BTNplus EQU 2   
@@ -123,6 +132,11 @@ start_o EQU 0
 ok_o EQU 4
 plus_o EQU 8
 minus_o EQU 12
+    
+    
+flashMemoryMagic EQU 0xcafe
+flashMemoryMagicAddress EQU 0x08007C00
+tZapFlashAddress EQU flashMemoryMagicAddress+2
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++										
 
 
@@ -187,11 +201,24 @@ MAIN									; MAIN navesti hlavni smycky programu
     mov r1, #stateIdle
     str r1, [r0]
     
-    ldr r0, =tZap
-    mov r1, #tZAPdefault
-    str r1, [r0]
 
-	BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
+    ;check whether the FLASH contains valid data
+    ldr r1, =flashMemoryMagicAddress
+    ldrh r1, [r1]
+    ldr r2, =flashMemoryMagic
+    cmp r1, r2
+    itt ne
+    movne r1, #tZAPdefault ;if it does not, initialize tZap with factory default
+    bne STORE_NEW_TZAP
+    
+    ldr r1, =tZapFlashAddress
+    ldrh r1, [r1] ;otherwise load the previously stored value
+
+STORE_NEW_TZAP
+    ldr r0, =tZap
+    str r1, [r0]
+    
+    BL		RCC_CNF			; Volani podprogramu nastaveni hodinoveho systemu procesoru
 										; tj. skok na adresu s navestim RCC_CNF a ulozeni navratove 
 										; adresy do LR (Link Register)
     mov r0, #24000 ;24 000 cycles between SysTick interrupt (corresponds to 24MHz system clock)
@@ -202,11 +229,13 @@ MAIN									; MAIN navesti hlavni smycky programu
 										; byt v obsluze podprogramu tato instrukce jiz pouzita, nebot
 										; by doslo k prepsani LR a ztrate navratove adresy ->
 										; lze ale pouzit i jine instrukce (PUSH, POP) *!*
+    ;inittialize all communication subsystems.
+    ;SPI is used for 7segment updating, USART + DMA drive the communication with PC
     bl initSPI
     bl initUSART
     bl initDMA
     
-LOOP ;main application loop
+LOOP ;main application loop. Checks buttons and USART reception buffer, because accessing NVIC->ISR in assembler really sucks...
     bl checkStartButton
     bl checkPlusButton
     bl checkMinusButton
@@ -214,7 +243,7 @@ LOOP ;main application loop
     bl checkUsart
     b LOOP ; continue in main loop
     ALIGN 4
-    LTORG
+
 
 memcpy;(r0 ..destination, r1 .. source, r2 ... bytes)
     push {r3, lr}
@@ -242,18 +271,21 @@ MEMSET_LOOP
     
     pop {r3, pc}
 
+;Converts the given integer value into characters and stores them into supplied buffer.
+;It is the responsibility od the caller to ensure that enough space is available.
 int2str;(r0 .. integer value, r1 .. pointer to buffer, r2 ... buffer size)
     push {r3-r7, lr}
     push {r0-r2}
     mov r0, r1
     mov r1, #' '
-    bl memset ;clear the buffer with spaces.
+    bl memset ;clear the buffer with spaces (optimal fill character for terminal output).
     pop {r0-r2}
 
     push {r0-r2}
     mov r3, r0
     mov r4, r1
-CONVERSION_LOOP
+;use the simplest conversion algorithm: take modulo by 10, add ASCII code of '0'.
+CONVERSION_LOOP ;repeat simple conversion 
     mov r0, r3
     mov r1, #10
     bl modulo
@@ -269,6 +301,7 @@ CONVERSION_LOOP
     mov r3, #2
     udiv r4, r2, r3
     mov r0, #0
+;characters are written in reverse order. We have to correct it
 REVERSE_LOOP
     sub r3, r2, r0
     sub r3, #1
@@ -282,27 +315,30 @@ REVERSE_LOOP
 
     pop {r0-r2}
     pop {r3-r7, pc}
-    
+    LTORG
 
+;handles reception of '+' or press of the plus button
 configIncrease
     push {r0-r2, lr}
     ldr r0, =systemState
     ldr r1, [r0]
     cmp r1, #stateConfiguration
     it ne
-    blne enterConfig
+    blne enterConfig ;if we are not in config mode, enter it now.
 
     ldr r0, =tZapUnsaved
     ldr r1, [r0]
-    add r1, #1
+    add r1, #1 ;increase unsaved tZap value
     mov r0, r1
     mov r1, #tZapMin
-    mov r2, #tZapMax
-    bl clamp
-    ldr r1, = tZapUnsaved
+    mov r2, #tZapMax 
+    bl clamp ;clamp it into reasonable range and write it back to memory.
+    ldr r1, = tZapUnsaved 
     str r0, [r1]
     pop {r0-r2,pc}
 
+;handles reception of '-' or press of the minus button.
+;identical to configIncrease except that the value of tZap is decreased by one instead of increased.
 configDecrease
     push {r0-r2, lr}
     ldr r0, =systemState
@@ -322,28 +358,36 @@ configDecrease
     str r0, [r1]
     pop {r0-r2,pc}
 
-
+;handles reception of ' ' (space) or press of the OK button
+;exits config state and stores the updated tZap value to tZap memory location
 configSave
-    push {r0-r1, lr}
+    push {r0-r2, lr}
     ldr r0, =systemState
     ldr r1, [r0]
     cmp r1, #stateConfiguration
     popne {r0-r1, pc}; we are not in state configuration -> ignore this button press
-    
-    mov r1, #stateIdle
-    str r1, [r0] ; go to state idle
-    ldr r0, =tZap
-    ldr r1, =tZapUnsaved
-    ldr r1, [r1]
-    str r1, [r0]
 
     ldr r0, =stringSavedStart
     ldr r1, =stringSaved
     mov r2, #stringSavedLen
     bl memcpy
     
-    pop {r0-r1, pc}
+    mov r1, #stateIdle
+    str r1, [r0] ; go to state idle
+    ldr r0, =tZap
+    ldr r1, =tZapUnsaved
+    ldr r1, [r1]
+    ldr r2, [r0]
+    cmp r1, r2
+    popeq {r0-r2, pc} ;return if the new value is the save as previous one
+    str r1, [r0]
 
+    ldr r0, =tZapFlashAddress
+    bl saveHalfToFlash
+    
+    pop {r0-r2, pc}
+
+;check whether a byte was received. Is yes, test it and branch to corresponding handler subroutine
 checkUsart
     push {r0-r3, lr}
     
@@ -362,6 +406,8 @@ checkUsart
     beq SPACE_RECEIVED
     cmp r1, #'s'
     beq S_RECEIVED
+    cmp r1, #'S' ;accept S case insensitive
+    beq S_RECEIVED
     b USART_DONE
     
 MINUS_RECEIVED
@@ -379,6 +425,8 @@ S_RECEIVED
 USART_DONE
     pop {r0-r3, pc}
 
+;checks whether the filtered minus button has detected a press.
+;Subroutines check...Button are almost identical, they only check different button
 checkMinusButton
     push {r0-r3, lr}
     mov r0, #BTNminus
@@ -398,7 +446,7 @@ checkMinusButton
     
     pop {r0-r3, pc};
 
-
+;checks whether the filtered plus button has detected a press
 checkPlusButton
     push {r0-r3, lr}
     mov r0, #BTNplus
@@ -417,7 +465,8 @@ checkPlusButton
     bl configIncrease
     
     pop {r0-r3, pc};
-
+    
+;checks whether the filtered OK button has detected a press
 checkOkButton
     push {r0-r3, lr}
     mov r0, #BTNok
@@ -437,6 +486,7 @@ checkOkButton
     
     pop {r0-r3, pc};
         
+;checks whether the filtered ACTIVATE (a.k.a. START) button has detected a press        
 checkStartButton
     push {r0-r3, lr}
     mov r0, #BTNstart
@@ -455,9 +505,11 @@ checkStartButton
     bl activateSystem
     pop {r0-r3, pc};
 START_PRESSED                
-    bl processStartPress
+    bl ledGreenOn
     pop {r0-r3, pc};
     
+;Transition to state "idle". Turns off LEDs, clears the 7segment, updates string printed to PC terminal.
+;Functions activateSystem and configEnter perform an almost identical action, they transition to different states however.
 deactivateSystem
     push {r0-r3,lr}
     ldr r0, =systemState
@@ -470,7 +522,7 @@ deactivateSystem
     bleq ledGreenOff ;turn off active indicator only if the user button is not pressed
     bl ledBlueOff ;
     mvn r0, #0
-    bl update7segment
+    bl sendTo7segment
 
     ldr r0, =stringOffStart
     ldr r1, =stringOff
@@ -479,6 +531,7 @@ deactivateSystem
     
     pop {r0-r3, pc}
 				
+;Transition to state "active". Turns on LEDs, clears the 7segment, updates string printed to PC terminal.                
 activateSystem
     push {r0-r1, lr}
     bl ledBlueOn
@@ -494,7 +547,7 @@ activateSystem
     ldr r0, [r0]
     bl getNumberSegments
 
-    bl update7segment
+    bl sendTo7segment
     
     ldr r0, =stringOnStart
     ldr r1, =stringOn
@@ -503,6 +556,7 @@ activateSystem
     
     pop {r0-r1, pc}
     
+;Transition to state "config". Turns off LEDs, clears the 7segment, updates string printed to PC terminal.
 enterConfig
     push {r1-r3, lr}
     bl deactivateSystem
@@ -515,7 +569,7 @@ enterConfig
     ldr r1, =tZapUnsaved
     str r0, [r1]
     mvn r0, #0
-    bl update7segment ;turn the display "off"
+    bl sendTo7segment ;turn the display "off"
     
     ldr r0, =stringConfStart
     ldr r1, =stringConf
@@ -523,12 +577,7 @@ enterConfig
     bl memcpy
     
     pop {r1-r3, pc}
-    
-processStartPress
-    push {lr}
-    bl ledGreenOn
-    pop {pc}
-    
+        
     
 initSPI ;initialize SPI2 connected to the 7segment shift register
     push {r0-r1}
@@ -544,6 +593,7 @@ initSPI ;initialize SPI2 connected to the 7segment shift register
     pop {r0-r1}
     bx lr
     
+;common algorithm performing clamping of given value within the bounds of closed interval
 clamp;(r0 value, r1 min, r2 max)
     cmp r0, r2
     
@@ -557,6 +607,8 @@ clamp;(r0 value, r1 min, r2 max)
     
     bx lr
     
+;returns bitmask representing on/off segments in digit to be displayed.
+;output of this function shall be sent to the shift register straight away
 getNumberSegments;(r0 .. positive number from interval <0, 10>)
     push {r1-r3, lr}
     mov r1, #10
@@ -568,23 +620,28 @@ getNumberSegments;(r0 .. positive number from interval <0, 10>)
     ldr r0, [r2, r0]
     pop {r1-r3, pc}
 
-update7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, decimal point ... msb)
+
+sendTo7segment;(r0 ... 8bit wide bitmask identifying segments with a...lsb, decimal point ... msb)
     push {r1, lr}
     ldr r1, =SPI2_BASE
     strh r0, [r1, #SPI_DR_o] ; store the new byte to be sent
     pop {r1, pc}
 
+;returns true iff the left half of 7segment display shall be turned on
 shallLeftBeOn ; returns true in r0 iff the left display shall be on
     push {lr}
     bl GetTick
     bic r0, #~1 ;clear everything except for lsb
     pop {pc}
     
+;periodically called handler from the SysTick interrupt isr.
+;Determines the next action within the application. blinks all LEDs, 
+;is responsible for periodical switching of left/right anode power supply.
 applicationTick
     push {r0-r3,lr}
     
     mvn r0, #0
-    bl update7segment
+    bl sendTo7segment
     bl shallLeftBeOn
     tst r0, r0
     bne LEFT_ON
@@ -618,7 +675,7 @@ DISPLAY_DONE
     bge HANDLE_ACTIVE
     bl deactivateSystem
     pop {r0-r3, pc}
-    
+    LTORG
 HANDLE_CONFIG
 
     ldr r0, =tZapUnsaved
@@ -646,7 +703,7 @@ HANDLE_CONFIG
     mvnge r0, #0
     
     and r0, r6
-    bl update7segment
+    bl sendTo7segment
     pop {r0-r3, pc}
     
     
@@ -680,7 +737,7 @@ HANDLE_IDLE
     mov r0, r7
     it ne
     bicne r0, #segmentDP  
-    bl update7segment
+    bl sendTo7segment
     pop {r0-r3, pc}
     
     
@@ -703,7 +760,7 @@ HANDLE_ACTIVE
     mov r0, r7
     
     bl getNumberSegments
-    bl update7segment
+    bl sendTo7segment
     pop {r0-r3, pc}
 
 modulo; returns r0 % r1
@@ -713,6 +770,7 @@ modulo; returns r0 % r1
     sub r0, r2
     pop {r1-r2, pc}
 
+;return true iff r0 is divisible by r1
 isDivisible;(r0 what, r1 divider)
     push {r1-r2, lr}
     bl modulo
@@ -722,6 +780,7 @@ isDivisible;(r0 what, r1 divider)
     movne r0, #0
     pop {r1-r2, pc}    
     
+;return the USART1 peripheral for communication with PC
 initUSART
     push {r0-r3, lr}
     ldr r0, =USART1_BASE
@@ -741,6 +800,7 @@ initUSART
     
     pop {r0-r3, pc}
     
+;initializes DMA controller for USART tranmission
 initDMA; we use DMA1, channel 4 for USART1_TX
     push {r0-r3, lr}
     ldr r0, =DMA1_BASE
@@ -761,5 +821,73 @@ initDMA; we use DMA1, channel 4 for USART1_TX
     str r1, [r0, #DMA_CCR4_o]
     
     pop {r0-r3, pc}
+    
+;write halfword in r1 into the flash memory location pointed to by r0.
+;This function assumes that the memory has been unlocked before and should therefore not be called directly.
+;Function saveHalfToFlash shall be used instead as it constitutes the public interface of FLASH module
+programHalf;(r0 address, r1 halfword)
+    push {r2-r3, lr}
+    ldr r3, =FLASH_BASE
+    ldr r2, [r3, #FLASH_CR_o]
+    orr r2, r2, #1 ; set programming bit
+    str r2, [r3, #FLASH_CR_o]
+    strh r1, [r0]
+    bl awaitFlashOperationFinish
+    ldr r2, [r3, #FLASH_CR_o]
+    bic r2, r2, #1 ; clear programming bit
+    str r2, [r3, #FLASH_CR_o]
+    pop {r2-r3, pc}
+    
+awaitFlashOperationFinish
+    push {r0-r1, lr}
+    ldr r0, =FLASH_BASE
+FLASH_LOOP_BSY
+    ldr r1, [r0, #FLASH_SR_o]
+    tst r1, #1 :SHL:0 ;test BSY bit
+    bne FLASH_LOOP_BSY    
+    pop {r0-r1, pc}
+    
+;Erase FLASH page containing the address in r0
+erasePage;(r0 .. address in page)
+    push {r1-r3, lr}
+    ldr r3, =FLASH_BASE
+    ldr r2, [r3, #FLASH_CR_o]
+    orr r2, r2, #1 :SHL: 1 ; set page erase bit
+    str r2, [r3, #FLASH_CR_o]
+    str r0, [r3, #FLASH_AR_o]
+    
+    ldr r2, [r3, #FLASH_CR_o]
+    orr r2, r2, #1 :SHL: 6 ; start
+    str r2, [r3, #FLASH_CR_o]
+    bl awaitFlashOperationFinish
+    ldr r2, [r3, #FLASH_CR_o]
+    bic r2, r2, #1 :SHL: 1 ; clear page erase bit
+    str r2, [r3, #FLASH_CR_o]
+
+    pop {r1-r3, pc}
+    
+;stores halfword in r1 into the memory location pointed to by r0.
+;This function is the public API and takes care of all FLASH erassure, unlocking etc.
+saveHalfToFlash; (r0 address, r1 halfword value)
+    push {r2-r5, lr}
+    ldr r3, =FLASH_BASE
+    ; unlock the flash interface
+    ldr r2, =0x45670123
+    str r2, [r3, #FLASH_KEYR_o]
+    ldr r2, =0xCDEF89AB
+    str r2, [r3, #FLASH_KEYR_o]
+    
+    bl erasePage
+    
+    bl programHalf
+    ldr r0, =flashMemoryMagicAddress
+    ldr r1, =flashMemoryMagic
+    bl programHalf
+    
+    ldr r2, [r3, #FLASH_CR_o]
+    orr r2, #1 :SHL: 7; lock the flash interface
+    str r2, [r3, #FLASH_CR_o]
+    
+    pop {r2-r5, pc}
 
     END	

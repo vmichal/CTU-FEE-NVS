@@ -138,7 +138,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGTARM</Key>
-          <Name>(1010=-1,-1,-1,-1,0)(1007=105,137,282,402,0)(1008=-478,262,-112,488,0)(1009=-1,-1,-1,-1,0)(100=809,108,1445,771,0)(110=1111,251,1321,701,0)(111=60,88,270,538,0)(1011=-1,-1,-1,-1,0)(180=-1,-1,-1,-1,0)(120=376,284,787,679,0)(121=833,117,1244,512,0)(122=75,104,486,499,0)(123=-1,-1,-1,-1,0)(140=-1,-1,-1,-1,0)(240=-1,-1,-1,-1,0)(190=-1800,153,-1648,367,0)(200=-1,-1,-1,-1,0)(170=-1,-1,-1,-1,0)(130=-1,-1,-1,-1,0)(131=-1,-1,-1,-1,0)(132=-1,-1,-1,-1,0)(133=-1,-1,-1,-1,0)(160=-1,-1,-1,-1,0)(161=-1,-1,-1,-1,0)(162=-1,-1,-1,-1,0)(210=491,229,808,580,0)(211=1161,432,1478,783,0)(220=-1,-1,-1,-1,0)(221=-1,-1,-1,-1,0)(230=-1,-1,-1,-1,0)(231=-1,-1,-1,-1,0)(232=-1,-1,-1,-1,0)(233=-1,-1,-1,-1,0)(150=-1,-1,-1,-1,0)(151=-1,-1,-1,-1,0)</Name>
+          <Name>(1010=-1,-1,-1,-1,0)(1007=105,137,282,402,0)(1008=-478,262,-112,488,0)(1009=-1,-1,-1,-1,0)(100=809,108,1445,771,0)(110=1111,251,1321,701,0)(111=60,88,270,538,0)(1011=-1194,309,-670,660,0)(180=-1,-1,-1,-1,0)(120=-1004,319,-593,714,0)(121=-910,466,-499,861,0)(122=-696,441,-285,836,0)(123=-1,-1,-1,-1,0)(140=-883,227,-205,557,0)(240=-1,-1,-1,-1,0)(190=-1800,153,-1648,367,0)(200=-1,-1,-1,-1,0)(170=-1,-1,-1,-1,0)(130=-1,-1,-1,-1,0)(131=-1,-1,-1,-1,0)(132=-1,-1,-1,-1,0)(133=-1,-1,-1,-1,0)(160=-535,295,-97,699,0)(161=-1,-1,-1,-1,0)(162=-1,-1,-1,-1,0)(210=491,229,808,580,0)(211=1161,432,1478,783,0)(220=-1,-1,-1,-1,0)(221=-1,-1,-1,-1,0)(230=-1,-1,-1,-1,0)(231=-1,-1,-1,-1,0)(232=-1,-1,-1,-1,0)(233=-1,-1,-1,-1,0)(150=-1,-1,-1,-1,0)(151=-1,-1,-1,-1,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -156,12 +156,45 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>828</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134219484</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>.\LED_TLC.asm</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>837</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>.\LED_TLC.asm</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+      </Breakpoint>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x20000004</ItemText>
+          <ItemText>0x08007c00</ItemText>
         </Mm>
       </MemoryWindow1>
       <Tracepoint>
@@ -195,6 +228,12 @@
       </DebugFlag>
       <LintExecutable></LintExecutable>
       <LintConfigFile></LintConfigFile>
+      <SystemViewers>
+        <Entry>
+          <Name>System Viewer\FLASH</Name>
+          <WinId>35905</WinId>
+        </Entry>
+      </SystemViewers>
     </TargetOption>
   </Target>
 
@@ -212,8 +251,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>109</TopLine>
-      <CurrentLine>118</CurrentLine>
+      <TopLine>100</TopLine>
+      <CurrentLine>117</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\STM32F10x.s</PathWithFileName>
       <FilenameWithoutPath>STM32F10x.s</FilenameWithoutPath>
@@ -226,10 +265,10 @@
       <FileType>2</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>85</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>394</TopLine>
-      <CurrentLine>122</CurrentLine>
+      <TopLine>856</TopLine>
+      <CurrentLine>870</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\LED_TLC.asm</PathWithFileName>
       <FilenameWithoutPath>LED_TLC.asm</FilenameWithoutPath>
@@ -260,7 +299,7 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>49</TopLine>
+      <TopLine>53</TopLine>
       <CurrentLine>68</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\SysTick.s</PathWithFileName>
@@ -274,10 +313,10 @@
       <FileType>2</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>4</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>103</TopLine>
-      <CurrentLine>238</CurrentLine>
+      <TopLine>250</TopLine>
+      <CurrentLine>265</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\GPIO.s</PathWithFileName>
       <FilenameWithoutPath>GPIO.s</FilenameWithoutPath>
@@ -290,10 +329,10 @@
       <FileType>2</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>19</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>62</TopLine>
-      <CurrentLine>102</CurrentLine>
+      <TopLine>75</TopLine>
+      <CurrentLine>108</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\RCC.s</PathWithFileName>
       <FilenameWithoutPath>RCC.s</FilenameWithoutPath>

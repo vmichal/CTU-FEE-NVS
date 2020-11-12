@@ -6,6 +6,7 @@
 ;* POPIS			: soubor s pojmenovanymi adresami registru
 ;********************************************************************************
 
+;Vojtech Michal added definitions for SPI, DMA, FLASH drivers and modified USART definitions
 
 	AREA    STM32F10x_INI, CODE, READONLY    
 
@@ -51,6 +52,14 @@ DMA_CCR4_o EQU 0x44
 DMA_CNDTR4_o EQU 0x48
 DMA_CPAR4_o EQU 0x4c
 DMA_CMAR4_o EQU 0x50
+    
+FLASH_BASE EQU 0x40022000
+    
+FLASH_ACR_o EQU 0x0
+FLASH_KEYR_o EQU 0x4
+FLASH_SR_o EQU 0xc
+FLASH_CR_o EQU 0x10    
+FLASH_AR_o EQU 0x14    
 
 ;********************************************************************************
 ;*   				GPIOA				 	  	*
